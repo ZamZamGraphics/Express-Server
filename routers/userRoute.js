@@ -3,7 +3,7 @@ const { login } = require("../controllers/loginController");
 const {
   register,
   allUser,
-  singleUser,
+  userById,
 } = require("../controllers/userController");
 const {
   doLoginValidators,
@@ -15,7 +15,7 @@ const {
 } = require("../validator/userValidator");
 
 router.get("/", allUser);
-router.get("/:id", singleUser);
+router.get("/:id", userById);
 
 router.post("/register", userValidators, userValidationHandler, register);
 router.put("/:id");

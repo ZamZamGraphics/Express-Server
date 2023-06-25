@@ -4,7 +4,6 @@ const morgan = require("morgan");
 const cors = require("cors");
 const path = require("path");
 const createError = require("http-errors");
-const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 
@@ -18,8 +17,8 @@ const DB_URL = process.env.MONGODB_URL || null;
 app.use(morgan("dev"));
 app.use(cors());
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // set static folder
 app.use(express.static(path.join(__dirname, "public")));
