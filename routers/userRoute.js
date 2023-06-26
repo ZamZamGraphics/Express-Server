@@ -4,6 +4,7 @@ const {
   register,
   allUser,
   userById,
+  userUpdate,
 } = require("../controllers/userController");
 const {
   doLoginValidators,
@@ -18,7 +19,7 @@ router.get("/", allUser);
 router.get("/:id", userById);
 
 router.post("/register", userValidators, userValidationHandler, register);
-router.put("/:id");
+router.put("/:id", userUpdate);
 router.delete("/:id");
 router.post("/login", doLoginValidators, doLoginValidationHandler, login);
 

@@ -3,16 +3,26 @@ const User = require("../models/User");
 const { serverError, resourceError } = require("../utilities/error");
 
 const allUser = (req, res) => {
-  let limit = req.query.limit || 0;
-  let page = req.query.page || 0;
+  const limit = req.query.limit || 0;
+  const page = req.query.page || 0;
+  let search = req.query.search || null;
+  // searchQuery field "fullname", "username", "email", "role", "status"
+  const searchQuery = {
+    $or: [
+      { fullname: { $regex: search, $options: "i" } },
+      { username: search },
+      { email: search },
+      { role: search },
+      { status: search },
+    ],
+  };
+  search = search ? searchQuery : {};
 
-  // "fullname", "username", "email", "role", "status"
-
-  User.find()
+  User.find(search)
     .select({
       __v: 0,
     })
-    // users?page=1&limit=10
+    // users?page=1&limit=10&search=value
     .skip(limit * page) // Page Number * Show Par Page
     .limit(limit) // Show Par Page
     .sort({ createdAt: -1 }) // Last User is First
@@ -64,6 +74,8 @@ const register = (req, res) => {
   });
 };
 
+const userUpdate = (req, res) => {};
+
 const loginUser = (req, res) => {
   let { username, password } = req.body;
 
@@ -74,5 +86,6 @@ module.exports = {
   allUser,
   userById,
   register,
+  userUpdate,
   loginUser,
 };
