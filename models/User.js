@@ -23,6 +23,8 @@ const userSchema = new Schema(
     },
     status: {
       type: String,
+      enum: ["Verified", "Unverified"],
+      default: "Unverified",
     },
     token: {
       type: String,
@@ -32,8 +34,8 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: ["Admin", "User"],
+      default: "User",
     },
   },
   {

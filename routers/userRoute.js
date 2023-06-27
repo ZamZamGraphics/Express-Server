@@ -4,7 +4,8 @@ const {
   register,
   allUser,
   userById,
-  userUpdate,
+  updateUser,
+  deleteUser,
 } = require("../controllers/userController");
 const {
   doLoginValidators,
@@ -14,13 +15,22 @@ const {
   userValidators,
   userValidationHandler,
 } = require("../validator/userValidator");
+const {
+  userUpdateValidators,
+  userUpdateValidationHandler,
+} = require("../validator/userUpdateValidator");
 
 router.get("/", allUser);
 router.get("/:id", userById);
 
 router.post("/register", userValidators, userValidationHandler, register);
-router.put("/:id", userUpdate);
-router.delete("/:id");
+router.patch(
+  "/:id",
+  userUpdateValidators,
+  userUpdateValidationHandler,
+  updateUser
+);
+router.delete("/:id", deleteUser);
 router.post("/login", doLoginValidators, doLoginValidationHandler, login);
 
 module.exports = router;
