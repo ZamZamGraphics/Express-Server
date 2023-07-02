@@ -41,6 +41,12 @@ const userValidators = [
     .withMessage(
       "Password must be at least 8 characters long & should contain at least 1 lowercase, 1 uppercase, 1 number & 1 symbol"
     ),
+  check("status")
+    .isIn(["Verified", "Unverified"])
+    .withMessage("Status must be Verified or Unverified"),
+  check("role")
+    .isIn(["Admin", "User"])
+    .withMessage("Role must be Admin ro User"),
 ];
 
 const userValidationHandler = (req, res, next) => {

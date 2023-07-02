@@ -96,22 +96,24 @@ const updateUser = async (req, res) => {
       newPassword = match ? user.password : hash;
     }
 
-    let updateUser = new User({
+    let updatedUser = {
       fullname,
       email,
       password: newPassword,
       status,
-      role,
       avatar,
-    });
+      role,
+    };
 
-    const updatedUser = await User.findByIdAndUpdate(id, updateUser, {
-      new: true,
-    });
+    const updateData = await User.findByIdAndUpdate(
+      id,
+      { $set: updatedUser },
+      { new: true }
+    );
 
     res.status(200).json({
       message: "User was updated successfully",
-      updatedUser,
+      updateData,
     });
   } catch (error) {
     serverError(res, error);
