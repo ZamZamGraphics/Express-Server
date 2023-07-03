@@ -54,8 +54,8 @@ const register = (req, res) => {
     }
     try {
       // Generate token by jsonwebtoken and send mail to verify user email
-      const token = jwt.sign({ username, email }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: 60,
       });
 
       let user = new User({

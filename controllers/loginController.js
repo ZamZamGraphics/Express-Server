@@ -3,8 +3,62 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { serverError, resourceError } = require("../utilities/error");
 
+// verify token
+const verification = async (req, res, next) => {
+  try {
+    const token = req.query.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const email = decoded.email;
+
+    const user = await User.findOne({ email });
+    if (user) {
+      await User.updateOne(
+        { email },
+        {
+          $set: {
+            status: "Verified",
+            token: null,
+          },
+        }
+      );
+      res.status(200).json({
+        message: "Verification successful",
+      });
+    } else {
+      resourceError(res, { message: "User not exist or email is incorrect!" });
+    }
+  } catch (err) {
+    return resourceError(res, {
+      message: "The Verification Token Has Expired or is invalid!",
+      err,
+    });
+  }
+};
+
+// resend verification code to email
+const resendVerification = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (user) {
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: 60,
+      });
+      await User.updateOne({ email }, { $set: { token } });
+      res.status(200).json({
+        message: "Resend Verification code",
+        token,
+      });
+    } else {
+      resourceError(res, { message: "User not exist or email is incorrect!" });
+    }
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
 // do login
-async function login(req, res, next) {
+const login = async (req, res, next) => {
   try {
     // find a user who has this email/username
     const user = await User.findOne({
@@ -65,15 +119,17 @@ async function login(req, res, next) {
   } catch (err) {
     return serverError(res, err);
   }
-}
+};
 
 // do logout
-function logout(req, res) {
+const logout = (req, res) => {
   res.clearCookie(process.env.COOKIE_NAME);
   res.send("logged out");
-}
+};
 
 module.exports = {
+  verification,
+  resendVerification,
   login,
   logout,
 };

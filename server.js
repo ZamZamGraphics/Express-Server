@@ -29,7 +29,7 @@ app.use("/api/v1/users", require("./routers/userRoute"));
 
 // API Home Route
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     message: "Welcome To Our Application",
   });
 });
@@ -41,10 +41,13 @@ app.use((req, res, next) => {
 
 // common error handler
 app.use((err, req, res, next) => {
-  res.locals.error =
-    process.env.NODE_ENV === "development" ? err : { message: err.message };
+  error =
+    process.env.NODE_ENV === "development"
+      ? err
+      : { message: "Internal Server Error" };
+  console.log(error);
   res.status(err.status || 500);
-  res.json(res.locals.error);
+  res.json(error);
 });
 
 app.listen(PORT, () => {

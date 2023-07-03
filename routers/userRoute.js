@@ -1,5 +1,9 @@
 const router = require("express").Router();
-const { login } = require("../controllers/loginController");
+const {
+  login,
+  verification,
+  resendVerification,
+} = require("../controllers/loginController");
 const {
   register,
   allUser,
@@ -20,6 +24,13 @@ const {
   userUpdateValidationHandler,
 } = require("../validator/userUpdateValidator");
 
+// public route
+router.get("/verify", verification);
+router.post("/resend", resendVerification);
+
+router.post("/login", doLoginValidators, doLoginValidationHandler, login);
+
+//privet route
 router.get("/", allUser);
 router.get("/:id", userById);
 
@@ -31,6 +42,5 @@ router.patch(
   updateUser
 );
 router.delete("/:id", deleteUser);
-router.post("/login", doLoginValidators, doLoginValidationHandler, login);
 
 module.exports = router;
