@@ -22,14 +22,14 @@ const verification = async (req, res, next) => {
         }
       );
       res.status(200).json({
-        message: "Verification successful",
+        msg: "Verification successful",
       });
     } else {
-      resourceError(res, { message: "User not exist or email is incorrect!" });
+      resourceError(res, { msg: "User not exist or email is incorrect!" });
     }
   } catch (err) {
     return resourceError(res, {
-      message: "The Verification Token Has Expired or is invalid!",
+      msg: "The Verification Token Has Expired or is invalid!",
       err,
     });
   }
@@ -46,14 +46,72 @@ const resendVerification = async (req, res, next) => {
       });
       await User.updateOne({ email }, { $set: { token } });
       res.status(200).json({
-        message: "Resend Verification code",
+        msg: "Resend Verification code",
         token,
       });
     } else {
-      resourceError(res, { message: "User not exist or email is incorrect!" });
+      resourceError(res, { msg: "User not exist or email is incorrect!" });
     }
   } catch (error) {
     serverError(res, error);
+  }
+};
+
+// forgot password
+const forgotPassowrd = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (user) {
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: 60,
+      });
+      await User.updateOne({ email }, { $set: { token } });
+      res.status(200).json({
+        msg: "Check your email to reset password",
+        token,
+      });
+    } else {
+      resourceError(res, { msg: "User not exist or email is incorrect!" });
+    }
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+// reset password
+const resetPassword = async (req, res, next) => {
+  try {
+    const token = req.query.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const email = decoded.email;
+
+    const user = await User.findOne({ email });
+    if (user) {
+      bcrypt.hash(req.body.password, 11, async (err, hash) => {
+        if (err) {
+          return resourceError(res, "Server Error Occurred");
+        }
+        try {
+          await User.updateOne(
+            { email },
+            { $set: { password: hash, token: null } }
+          );
+          res.status(200).json({
+            msg: "Password has been successfully changed",
+          });
+        } catch (error) {
+          serverError(res, error);
+        }
+      });
+    } else {
+      resourceError(res, { msg: "User not exist or email is incorrect!" });
+    }
+  } catch (err) {
+    return resourceError(res, {
+      msg: "The Reset Token Has Expired or is invalid!",
+      err,
+    });
   }
 };
 
@@ -75,10 +133,12 @@ const login = async (req, res, next) => {
         // prepare the user object to generate token
         const userObject = {
           userid: user._id,
+          fullname: user.fullname,
           username: user.username,
           email: user.email,
           avatar: user.avatar || null,
-          role: user.role || "user",
+          status: user.status,
+          role: user.role,
         };
 
         // generate token
@@ -86,33 +146,19 @@ const login = async (req, res, next) => {
           expiresIn: process.env.JWT_EXPIRY,
         });
 
-        // set cookie
-        res.cookie(process.env.COOKIE_NAME, token, {
-          maxAge: process.env.JWT_EXPIRY,
-          httpOnly: true,
-          signed: true,
-        });
-
-        // set logged in user local identifier
-        res.locals.loggedInUser = userObject;
-
         res.status(200).json({
           success: true,
-          token: token,
+          token: `Bearer ${token}`,
         });
       } else {
         const errors = {
-          common: {
-            msg: "The username or password is incorrect! Please try again.",
-          },
+          msg: "The username or password is incorrect! Please try again.",
         };
         return resourceError(res, errors);
       }
     } else {
       const errors = {
-        common: {
-          msg: "The username or password is incorrect! Please try again.",
-        },
+        msg: "The username or password is incorrect! Please try again.",
       };
       return resourceError(res, errors);
     }
@@ -121,15 +167,10 @@ const login = async (req, res, next) => {
   }
 };
 
-// do logout
-const logout = (req, res) => {
-  res.clearCookie(process.env.COOKIE_NAME);
-  res.send("logged out");
-};
-
 module.exports = {
   verification,
   resendVerification,
+  forgotPassowrd,
+  resetPassword,
   login,
-  logout,
 };
