@@ -35,6 +35,7 @@ const authenticate = require("../middleware/authenticate");
 router.get("/verify", verification);
 router.post("/resend", resendVerification);
 
+// forgot password
 router.post("/forgot-password", forgotPassowrd);
 router.post(
   "/reset",
@@ -43,6 +44,7 @@ router.post(
   resetPassword
 );
 
+// login
 router.post("/login", doLoginValidators, doLoginValidationHandler, login);
 
 //privet route

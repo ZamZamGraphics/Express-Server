@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
@@ -22,6 +23,7 @@ const verification = async (req, res, next) => {
         }
       );
       res.status(200).json({
+        success: true,
         msg: "Verification successful",
       });
     } else {
@@ -63,12 +65,12 @@ const forgotPassowrd = async (req, res, next) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (user) {
-      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: 60,
-      });
+      const token = crypto.randomBytes(32).toString("hex");
       await User.updateOne({ email }, { $set: { token } });
+
       res.status(200).json({
         msg: "Check your email to reset password",
+        userId: user._id,
         token,
       });
     } else {
@@ -82,31 +84,38 @@ const forgotPassowrd = async (req, res, next) => {
 // reset password
 const resetPassword = async (req, res, next) => {
   try {
-    const token = req.query.token;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const email = decoded.email;
-
-    const user = await User.findOne({ email });
-    if (user) {
-      bcrypt.hash(req.body.password, 11, async (err, hash) => {
-        if (err) {
-          return resourceError(res, "Server Error Occurred");
-        }
-        try {
-          await User.updateOne(
-            { email },
-            { $set: { password: hash, token: null } }
-          );
-          res.status(200).json({
-            msg: "Password has been successfully changed",
-          });
-        } catch (error) {
-          serverError(res, error);
-        }
+    const { id, token } = req.query;
+    const user = await User.findById(id);
+    if (!user)
+      return resourceError(res, {
+        msg: "The Reset Token Has Expired or is invalid!",
       });
-    } else {
-      resourceError(res, { msg: "User not exist or email is incorrect!" });
-    }
+
+    const validateToken = await User.findOne({ _id: id, token });
+    if (!validateToken)
+      return resourceError(res, {
+        msg: "The Reset Token Has Expired or is invalid!",
+      });
+
+    bcrypt.hash(req.body.password, 11, async (err, hash) => {
+      if (err) {
+        return resourceError(res, "Server Error Occurred");
+      }
+
+      try {
+        await User.findByIdAndUpdate(
+          { _id: id },
+          { $set: { password: hash, token: null } }
+        );
+
+        res.status(200).json({
+          success: true,
+          msg: "Password has been successfully changed",
+        });
+      } catch (error) {
+        serverError(res, error);
+      }
+    });
   } catch (err) {
     return resourceError(res, {
       msg: "The Reset Token Has Expired or is invalid!",
