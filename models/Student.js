@@ -43,6 +43,7 @@ const studentSchema = new Schema({
   },
   gender: {
     type: String,
+    required: true,
     enum: ["Mail", "Femail"],
   },
   phone: [
@@ -62,7 +63,7 @@ const studentSchema = new Schema({
     min: 10,
     max: 17,
   },
-  nid: {
+  birthCertificate: {
     type: Number,
     min: 17,
     max: 17,
@@ -81,8 +82,8 @@ const studentSchema = new Schema({
       ref: "Admission",
     },
   ],
-  userId: { type: Schema.Types.ObjectId, ref: "User" },
-  due: Number,
+  user: { type: Schema.Types.ObjectId, ref: "User" },
+  totalDues: { type: Number, default: 0 },
   registeredAt: { type: Date, default: Date.now },
 });
 

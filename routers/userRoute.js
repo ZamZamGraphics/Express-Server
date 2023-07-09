@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const authenticate = require("../middleware/authenticate");
 const {
   login,
   verification,
@@ -29,7 +30,6 @@ const {
   resetPasswordValidators,
   resetPasswordValidationHandler,
 } = require("../validator/resetPasswordValidator");
-const authenticate = require("../middleware/authenticate");
 
 // public route
 router.get("/verify", verification);
