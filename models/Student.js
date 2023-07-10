@@ -2,10 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const studentSchema = new Schema({
-  studentId: {
-    type: Number,
-    unique: true,
-  },
+  studentId: String,
   avatar: {
     type: String,
   },
@@ -24,19 +21,17 @@ const studentSchema = new Schema({
     required: true,
     trim: true,
   },
-  address: [
-    {
-      present: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      permanent: {
-        type: String,
-        trim: true,
-      },
+  address: {
+    present: {
+      type: String,
+      required: true,
+      trim: true,
     },
-  ],
+    permanent: {
+      type: String,
+      trim: true,
+    },
+  },
   birthDay: {
     type: Date,
     required: true,
@@ -44,7 +39,7 @@ const studentSchema = new Schema({
   gender: {
     type: String,
     required: true,
-    enum: ["Mail", "Femail"],
+    enum: ["Male", "Female"],
   },
   phone: [
     {
@@ -58,16 +53,8 @@ const studentSchema = new Schema({
     lowercase: true,
   },
   occupation: String,
-  nid: {
-    type: Number,
-    min: 10,
-    max: 17,
-  },
-  birthCertificate: {
-    type: Number,
-    min: 17,
-    max: 17,
-  },
+  nid: String,
+  birthCertificate: String,
   bloodGroup: String,
   education: String,
   refrence: String,

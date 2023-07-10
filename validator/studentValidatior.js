@@ -30,8 +30,8 @@ const studentValidators = [
   check("gender")
     .isLength({ min: 1 })
     .withMessage("Gender is required")
-    .isIn(["Mail", "Femail"])
-    .withMessage("Gender must be Mail or Femail"),
+    .isIn(["Male", "Female"])
+    .withMessage("Gender must be Male or Female"),
   check("phone")
     .isLength({ min: 1 })
     .withMessage("Mobile number required")
