@@ -27,6 +27,9 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser(COOKIE_SECRET));
 
 app.use("/api/v1/students", authenticate, require("./routers/studentRoute"));
+app.use("/api/v1/admission", authenticate, require("./routers/admissionRoute"));
+app.use("/api/v1/courses", authenticate, require("./routers/courseRoute"));
+app.use("/api/v1/batches", authenticate, require("./routers/batchRoute"));
 app.use("/api/v1/users", require("./routers/userRoute"));
 
 // API Home Route

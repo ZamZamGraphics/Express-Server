@@ -65,7 +65,7 @@ const register = async (req, res) => {
       user: req.user.userid,
     });
     const student = await newStudent.save();
-    res.status(200).json({
+    res.status(201).json({
       message: "New Student Register",
       newStudent,
     });
