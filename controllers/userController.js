@@ -130,17 +130,10 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const loginUser = (req, res) => {
-  let { username, password } = req.body;
-
-  res.status(200).json(req.body);
-};
-
 module.exports = {
   allUser,
   userById,
   register,
   updateUser,
   deleteUser,
-  loginUser,
 };

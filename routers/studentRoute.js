@@ -6,7 +6,6 @@ const {
   updateStudent,
   deleteStudent,
 } = require("../controllers/studentController");
-const authenticate = require("../middleware/authenticate");
 const {
   studentValidators,
   studentValidationHandler,
@@ -15,7 +14,7 @@ const {
 router.get("/", allStudents);
 router.get("/:id", studentById);
 
-router.post("/register", authenticate, studentValidators, studentValidationHandler, register);
+router.post("/register", studentValidators, studentValidationHandler, register);
 router.patch("/:id", updateStudent);
 router.delete("/:id", deleteStudent);
 

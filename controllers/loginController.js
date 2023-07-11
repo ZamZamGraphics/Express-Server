@@ -132,6 +132,11 @@ const login = async (req, res, next) => {
       $or: [{ email: req.body.username }, { username: req.body.username }],
     });
 
+    if (user.status !== "Verified")
+      return resourceError(res, {
+        msg: "User not Verified",
+      });
+
     if (user && user._id) {
       const isValidPassword = await bcrypt.compare(
         req.body.password,
@@ -142,10 +147,6 @@ const login = async (req, res, next) => {
         // prepare the user object to generate token
         const userObject = {
           userid: user._id,
-          fullname: user.fullname,
-          username: user.username,
-          email: user.email,
-          avatar: user.avatar || null,
           status: user.status,
           role: user.role,
         };
@@ -153,6 +154,13 @@ const login = async (req, res, next) => {
         // generate token
         const token = jwt.sign(userObject, process.env.JWT_SECRET, {
           expiresIn: process.env.JWT_EXPIRY,
+        });
+
+        // set cookie
+        res.cookie("user", token, {
+          maxAge: process.env.JWT_EXPIRY,
+          httpOnly: true,
+          signed: true,
         });
 
         res.status(200).json({

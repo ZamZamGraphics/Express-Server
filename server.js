@@ -6,6 +6,7 @@ const path = require("path");
 const createError = require("http-errors");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+const authenticate = require("./middleware/authenticate");
 
 const app = express();
 dotenv.config();
@@ -25,7 +26,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // parse cookies
 app.use(cookieParser(COOKIE_SECRET));
 
-app.use("/api/v1/students", require("./routers/studentRoute"));
+app.use("/api/v1/students", authenticate, require("./routers/studentRoute"));
 app.use("/api/v1/users", require("./routers/userRoute"));
 
 // API Home Route

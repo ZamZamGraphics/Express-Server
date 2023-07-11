@@ -1,5 +1,5 @@
 const Student = require("../models/Student");
-const { serverError, resourceError } = require("../utilities/error");
+const { serverError } = require("../utilities/error");
 
 const allStudents = async (req, res) => {
   try {
@@ -74,10 +74,22 @@ const register = async (req, res) => {
   }
 };
 
-const updateStudent = (req, res) => {
-  res.status(200).json({
-    message: "Update Student",
-  });
+const updateStudent = async (req, res) => {
+  try {
+    let { id } = req.params;
+    const updateData = await Student.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Student was updated successfully",
+      updateData,
+    });
+  } catch (error) {
+    serverError(res, error);
+  }
 };
 
 const deleteStudent = async (req, res) => {
