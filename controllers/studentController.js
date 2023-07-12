@@ -29,6 +29,8 @@ const allStudents = async (req, res) => {
     };
     search = search ? searchQuery : {};
     const student = await Student.find(search)
+      .populate({ path: "user", select: "fullname" })
+      // .populate({ path: "admission" })
       .select({
         __v: 0,
       })

@@ -1,6 +1,5 @@
 const { check, validationResult } = require("express-validator");
 const { resourceError } = require("../utilities/error");
-const Student = require("../models/Student");
 
 // student validator
 const studentValidators = [

@@ -1,20 +1,22 @@
 const router = require("express").Router();
 
-router.get("/", (req, res) => {
-  res.status(200).json({ message: "All Course" });
-});
-router.get("/:id", (req, res) => {
-  res.status(200).json({ message: "Single Course by ID" });
-});
+const {
+  allCourses,
+  courseById,
+  newCourse,
+  updateCourse,
+  deleteCourse,
+} = require("../controllers/courseController");
+const {
+  courseValidators,
+  courseValidationHandler,
+} = require("../validator/courseValidator");
 
-router.post("/new", (req, res) => {
-  res.status(200).json({ message: "New Course" });
-});
-router.patch("/:id", (req, res) => {
-  res.status(200).json({ message: "Course Update" });
-});
-router.delete("/:id", (req, res) => {
-  res.status(200).json({ message: "Course Delete" });
-});
+router.get("/", allCourses);
+router.get("/:id", courseById);
+
+router.post("/new", courseValidators, courseValidationHandler, newCourse);
+router.patch("/:id", courseValidators, courseValidationHandler, updateCourse);
+router.delete("/:id", deleteCourse);
 
 module.exports = router;

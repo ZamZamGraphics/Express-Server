@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const batchSchema = new Schema({
   batchNo: {
-    type: Number,
+    type: String,
     required: true,
     unique: true,
   },
