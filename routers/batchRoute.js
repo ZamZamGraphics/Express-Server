@@ -1,20 +1,31 @@
 const router = require("express").Router();
 
-router.get("/", (req, res) => {
-  res.status(200).json({ message: "All Batch" });
-});
-router.get("/:id", (req, res) => {
-  res.status(200).json({ message: "Single Batch by ID" });
-});
+const {
+  allBatches,
+  batchById,
+  newBatch,
+  updateBatch,
+  deleteBatch,
+} = require("../controllers/batchController");
+const {
+  batchValidators,
+  batchValidationHandler,
+} = require("../validator/batchValidator");
+const {
+  batchUpdateValidators,
+  batchUpdateValidationHandler,
+} = require("../validator/batchUpdateValidator");
 
-router.post("/new", (req, res) => {
-  res.status(200).json({ message: "New Batch" });
-});
-router.patch("/:id", (req, res) => {
-  res.status(200).json({ message: "Batch Update" });
-});
-router.delete("/:id", (req, res) => {
-  res.status(200).json({ message: "Batch Delete" });
-});
+router.get("/", allBatches);
+router.get("/:id", batchById);
+
+router.post("/new", batchValidators, batchValidationHandler, newBatch);
+router.patch(
+  "/:id",
+  batchUpdateValidators,
+  batchUpdateValidationHandler,
+  updateBatch
+);
+router.delete("/:id", deleteBatch);
 
 module.exports = router;

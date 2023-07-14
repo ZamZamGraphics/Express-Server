@@ -11,11 +11,6 @@ const batchSchema = new Schema({
   studentIds: [{ type: Schema.Types.ObjectId, ref: "Student" }],
   startDate: Date,
   endDate: Date,
-  status: {
-    type: String,
-    enum: ["Upcoming", "Running", "Completed"],
-    default: "Upcoming",
-  },
   classDays: String,
   classTime: String,
 });
