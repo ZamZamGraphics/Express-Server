@@ -47,8 +47,8 @@ const allStudents = async (req, res) => {
 const studentById = async (req, res) => {
   try {
     let id = req.params.id;
-    const user = await Student.findById(id).select({ __v: 0 });
-    res.status(200).json(user);
+    const student = await Student.findById(id).select({ __v: 0 });
+    res.status(200).json(student);
   } catch (error) {
     serverError(res, error);
   }
@@ -69,7 +69,7 @@ const register = async (req, res) => {
     const student = await newStudent.save();
     res.status(201).json({
       message: "New Student Register",
-      newStudent,
+      student,
     });
   } catch (error) {
     serverError(res, error);
