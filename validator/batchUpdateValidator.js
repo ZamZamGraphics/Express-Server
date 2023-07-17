@@ -4,7 +4,7 @@ const Student = require("../models/Student");
 
 // batch validator
 const batchUpdateValidators = [
-  check("studentIds")
+  check("student")
     .isLength({ min: 1 })
     .withMessage("Student Id is required")
     .trim(),

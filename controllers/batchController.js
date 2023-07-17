@@ -19,6 +19,7 @@ const allBatches = async (req, res) => {
     };
     search = search ? searchQuery : {};
     const batches = await Batch.find(search)
+      .populate({ path: "course" })
       .select({
         __v: 0,
       })
@@ -44,24 +45,24 @@ const batchById = async (req, res) => {
 
 const newBatch = async (req, res) => {
   try {
-    const { studentIds } = req.body;
-    const ids = studentIds.split(",");
-    const student = await Student.find({ studentId: { $in: ids } }).select(
+    const { student } = req.body;
+    const ids = student.split(",");
+    const studentId = await Student.find({ studentId: { $in: ids } }).select(
       "_id"
     );
 
-    if (student === undefined || student.length == 0) {
+    if (studentId === undefined || studentId.length == 0) {
       return resourceError(res, { message: "The Student ID is Wrong!" });
     }
 
-    const course = await Course.findById({ _id: req.body.courseId });
+    const course = await Course.findById({ _id: req.body.course });
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date(req.body.startDate);
     const endDate = new Date(date.setDate(date.getDate() + duration));
 
     const newBatch = new Batch({
       ...req.body,
-      studentIds: student,
+      student: studentId,
       endDate,
     });
     const batch = await newBatch.save();
@@ -78,24 +79,24 @@ const newBatch = async (req, res) => {
 const updateBatch = async (req, res) => {
   try {
     let { id } = req.params;
-    const { studentIds, startDate, classDays, classTime } = req.body;
-    const ids = studentIds.split(",");
-    const student = await Student.find({ studentId: { $in: ids } }).select(
+    const { student, startDate, classDays, classTime } = req.body;
+    const ids = student.split(",");
+    const studentId = await Student.find({ studentId: { $in: ids } }).select(
       "_id"
     );
 
-    if (student === undefined || student.length == 0) {
+    if (studentId === undefined || studentId.length == 0) {
       return resourceError(res, { message: "The Student ID is Wrong!" });
     }
 
     const batch = await Batch.findById(id);
-    const course = await Course.findById({ _id: batch.courseId });
+    const course = await Course.findById({ _id: batch.course });
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date(req.body.startDate);
     const endDate = new Date(date.setDate(date.getDate() + duration));
 
     const updatedBatch = {
-      studentIds: student,
+      student: studentId,
       startDate,
       endDate,
       classDays,

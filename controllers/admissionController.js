@@ -20,10 +20,10 @@ const allAdmission = async (req, res) => {
     };
     search = search ? searchQuery : {};
     const admission = await Admission.find(search)
+      // .populate({ path: "student", select: "studentId fullName status" })
+      // .populate({ path: "course" })
+      // .populate({ path: "batch" })
       .populate({ path: "user", select: "fullname" })
-      .populate({ path: "student", select: "studentId fullName status" })
-      .populate({ path: "course" })
-      .populate({ path: "batch" })
       .select({
         __v: 0,
       })
@@ -49,56 +49,62 @@ const admissionById = async (req, res) => {
 
 const newAdmission = async (req, res) => {
   try {
-    const { studentId, courseId, batchNo, timeSchedule } = req.body;
-    const student = await Student.findOne({ studentId });
-    const course = await Course.findById({ _id: courseId });
-    const batch = await Batch.findOne({ batchNo });
+    const { student, course, discount, payment, batch, timeSchedule } =
+      req.body;
 
-    if (!student) {
+    const studentDetails = await Student.findOne({ studentId: student });
+    const batchDetails = await Batch.findOne({ batchNo: batch });
+    const courseDetails = await Course.findById({ _id: course });
+
+    let batchId;
+
+    if (!studentDetails) {
       return resourceError(res, { message: "The Student ID is Wrong!" });
     }
 
-    if (!batch) {
-      const duration = course.duration.split(" ")[0] * 30;
-      const date = new Date();
-      const startDate = new Date(date.setDate(date.getDate() + 20));
-      const endDate = new Date(
-        startDate.setDate(startDate.getDate() + duration)
-      );
-      const classDays = "Sat, Mon, Wed";
-
-      const studentId = student._id;
-
-      const newBatch = new Batch({
-        batchNo,
-        courseId,
-        studentIds: [studentId],
-        startDate,
-        endDate,
-        classDays,
-        classTime: timeSchedule,
-      });
-      console.log(newBatch);
+    if (!batchDetails) {
       // create new batch
-      //   const batch = await newBatch.save();
-      // student due update
-      // new admission
+      batchId = await createNewBatch(
+        batch,
+        courseDetails,
+        studentDetails,
+        timeSchedule
+      );
+    } else {
+      if (JSON.stringify(batchDetails.course) !== JSON.stringify(course)) {
+        return resourceError(res, { message: "Course Name did not matched!" });
+      }
+      batchId = batchNo._id;
+      // batch update
+      await Batch.findByIdAndUpdate(batchId, {
+        $addToSet: { student: studentId._id },
+      });
     }
+
+    const courseFee = courseId.courseFee;
+    const payableAmount = courseFee - (discount || 0);
+    const due = payableAmount - payment;
 
     const newAdmission = new Admission({
       ...req.body,
       studentId: student._id,
-      batchNo: 123, // collect new batch no
-      due: 213, // calcolate due
-      user: req.user.userid,
+      batchNo: batchId,
+      payableAmount,
+      due,
+      userId: req.user.userid,
     });
-    // batch update
-    // student due update
+
     // new admission
-    // const admission = await newAdmission.save();
+    const admission = await newAdmission.save();
+    // student due update
+    await Student.findByIdAndUpdate(student._id, {
+      $addToSet: { admission: admission._id },
+      $set: { totalDues: due + student.totalDues },
+    });
+
     res.status(201).json({
-      //   message: "New Admission Success!",
-      newAdmission,
+      message: "New Admission Success!",
+      admission,
     });
   } catch (error) {
     serverError(res, error);
@@ -117,6 +123,32 @@ const deleteAdmission = async (req, res) => {
 
     // await Admission.findByIdAndDelete(id);
     res.status(200).json({ message: "Admission was deleted!" });
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+const createNewBatch = async (batchNo, course, student, timeSchedule) => {
+  try {
+    const duration = course.duration.split(" ")[0] * 30;
+    const date = new Date();
+    const startDate = new Date(date.setDate(date.getDate() + 20));
+    const endDate = new Date(startDate.setDate(startDate.getDate() + duration));
+    const classDays = "Sat, Mon, Wed";
+
+    const studentId = student._id;
+
+    const newBatch = new Batch({
+      batchNo,
+      courseId: course._id,
+      studentIds: [studentId],
+      startDate,
+      endDate,
+      classDays,
+      classTime: timeSchedule,
+    });
+    const batch = await newBatch.save();
+    return batch._id;
   } catch (error) {
     serverError(res, error);
   }

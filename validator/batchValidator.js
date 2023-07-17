@@ -22,7 +22,7 @@ const batchValidators = [
         throw new Error(error.message);
       }
     }),
-  check("courseId")
+  check("course")
     .isLength({ min: 1 })
     .withMessage("Course Name is required")
     .trim()
@@ -36,7 +36,7 @@ const batchValidators = [
         throw new Error(error.message);
       }
     }),
-  check("studentIds")
+  check("student")
     .isLength({ min: 1 })
     .withMessage("Student Id is required")
     .trim(),
