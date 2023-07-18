@@ -49,58 +49,65 @@ const admissionById = async (req, res) => {
 
 const newAdmission = async (req, res) => {
   try {
-    const { student, course, discount, payment, batch, timeSchedule } =
-      req.body;
+    const {
+      student: studentId,
+      course: courseId,
+      discount,
+      payment,
+      batch: batchNo,
+      timeSchedule,
+    } = req.body;
 
-    const studentDetails = await Student.findOne({ studentId: student });
-    const batchDetails = await Batch.findOne({ batchNo: batch });
-    const courseDetails = await Course.findById({ _id: course });
+    const student = await Student.findOne({ studentId });
+    const batch = await Batch.findOne({ batchNo });
+    const course = await Course.findById({ _id: courseId });
 
     let batchId;
 
-    if (!studentDetails) {
+    if (!student) {
       return resourceError(res, { message: "The Student ID is Wrong!" });
     }
 
-    if (!batchDetails) {
+    if (!batch) {
       // create new batch
-      batchId = await createNewBatch(
-        batch,
-        courseDetails,
-        studentDetails,
-        timeSchedule
-      );
+      batchId = await createNewBatch(batchNo, course, student, timeSchedule);
     } else {
-      if (JSON.stringify(batchDetails.course) !== JSON.stringify(course)) {
+      if (JSON.stringify(batch.course) !== JSON.stringify(courseId)) {
         return resourceError(res, { message: "Course Name did not matched!" });
       }
-      batchId = batchNo._id;
+      batchId = batch._id;
       // batch update
-      await Batch.findByIdAndUpdate(batchId, {
-        $addToSet: { student: studentId._id },
-      });
+      await Batch.findByIdAndUpdate(
+        { _id: batchId },
+        {
+          $addToSet: { student: student._id },
+        }
+      );
     }
 
-    const courseFee = courseId.courseFee;
+    const courseFee = course.courseFee;
     const payableAmount = courseFee - (discount || 0);
     const due = payableAmount - payment;
 
     const newAdmission = new Admission({
       ...req.body,
-      studentId: student._id,
-      batchNo: batchId,
+      student: student._id,
+      batch: batchId,
       payableAmount,
       due,
-      userId: req.user.userid,
+      user: req.user.userid,
     });
 
     // new admission
     const admission = await newAdmission.save();
     // student due update
-    await Student.findByIdAndUpdate(student._id, {
-      $addToSet: { admission: admission._id },
-      $set: { totalDues: due + student.totalDues },
-    });
+    await Student.findByIdAndUpdate(
+      { _id: student._id },
+      {
+        $addToSet: { admission: admission._id },
+        $set: { totalDues: due + student.totalDues },
+      }
+    );
 
     res.status(201).json({
       message: "New Admission Success!",
@@ -109,6 +116,34 @@ const newAdmission = async (req, res) => {
   } catch (error) {
     serverError(res, error);
   }
+};
+
+const payment = async (req, res) => {
+  const student = await Student.findOne({ studentId: req.body.student });
+  const batch = await Batch.findOne({ batchNo: req.body.batch });
+
+  if (!student) {
+    return resourceError(res, { message: "The Student ID is Wrong!" });
+  }
+
+  if (!batch) {
+    return resourceError(res, { message: "Batch No did not matched!" });
+  }
+
+  const admission = await Admission.findOne({
+    student: student._id,
+    batch: batch._id,
+    paymentType: "New",
+  });
+
+  if (!admission) {
+    return resourceError(res, { message: "Batch No did not matched!" });
+  }
+
+  res.status(200).json({
+    message: "Payment POST Route",
+    admission,
+  });
 };
 
 const deleteAdmission = async (req, res) => {
@@ -136,12 +171,10 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
     const endDate = new Date(startDate.setDate(startDate.getDate() + duration));
     const classDays = "Sat, Mon, Wed";
 
-    const studentId = student._id;
-
     const newBatch = new Batch({
       batchNo,
-      courseId: course._id,
-      studentIds: [studentId],
+      course: course._id,
+      student: [student._id],
       startDate,
       endDate,
       classDays,
@@ -158,5 +191,6 @@ module.exports = {
   allAdmission,
   admissionById,
   newAdmission,
+  payment,
   deleteAdmission,
 };
