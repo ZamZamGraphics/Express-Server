@@ -30,7 +30,7 @@ const allStudents = async (req, res) => {
     search = search ? searchQuery : {};
     const student = await Student.find(search)
       .populate({ path: "user", select: "fullname" })
-      .populate({ path: "admission" })
+      .populate({ path: "admission", select: "course batch" })
       .select({
         __v: 0,
       })
@@ -47,7 +47,10 @@ const allStudents = async (req, res) => {
 const studentById = async (req, res) => {
   try {
     let id = req.params.id;
-    const student = await Student.findById(id).select({ __v: 0 });
+    const student = await Student.findById(id)
+      .populate({ path: "user", select: "fullname" })
+      .populate({ path: "admission", select: "course batch" })
+      .select({ __v: 0 });
     res.status(200).json(student);
   } catch (error) {
     serverError(res, error);

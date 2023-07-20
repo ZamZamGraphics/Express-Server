@@ -20,9 +20,12 @@ const allAdmission = async (req, res) => {
     };
     search = search ? searchQuery : {};
     const admission = await Admission.find(search)
-      // .populate({ path: "student", select: "studentId fullName status" })
-      // .populate({ path: "course" })
-      // .populate({ path: "batch" })
+      .populate({
+        path: "student",
+        select: "studentId avatar fullName address phone status",
+      })
+      .populate({ path: "course", select: "name courseType courseFee" })
+      .populate({ path: "batch", select: "batchNo startDate endDate" })
       .populate({ path: "user", select: "fullname" })
       .select({
         __v: 0,
@@ -40,7 +43,15 @@ const allAdmission = async (req, res) => {
 const admissionById = async (req, res) => {
   try {
     let id = req.params.id;
-    const admission = await Admission.findById(id).select({ __v: 0 });
+    const admission = await Admission.findById(id)
+      .populate({
+        path: "student",
+        select: "studentId avatar fullName address phone status",
+      })
+      .populate({ path: "course", select: "name courseType courseFee" })
+      .populate({ path: "batch", select: "batchNo startDate endDate" })
+      .populate({ path: "user", select: "fullname" })
+      .select({ __v: 0 });
     res.status(200).json(admission);
   } catch (error) {
     serverError(res, error);
@@ -133,16 +144,39 @@ const payment = async (req, res) => {
   const admission = await Admission.findOne({
     student: student._id,
     batch: batch._id,
-    paymentType: "New",
-  });
+  })
+    .sort({ createdAt: -1 })
+    .limit(1);
 
   if (!admission) {
     return resourceError(res, { message: "Batch No did not matched!" });
   }
 
+  const payableAmount = admission.due - (req.body.discount || 0);
+  const due = payableAmount - req.body.payment;
+
+  const admissionPayment = new Admission({
+    ...req.body,
+    student: student._id,
+    batch: batch._id,
+    payableAmount,
+    due,
+    user: req.user.userid,
+  });
+  // add New admission by paymentType is payment
+  const paymentData = await admissionPayment.save();
+
+  // student due update
+  await Student.findByIdAndUpdate(
+    { _id: student._id },
+    {
+      $set: { totalDues: student.totalDues - req.body.payment },
+    }
+  );
+
   res.status(200).json({
-    message: "Payment POST Route",
-    admission,
+    message: "Payment Success!",
+    paymentData,
   });
 };
 
@@ -150,8 +184,8 @@ const deleteAdmission = async (req, res) => {
   try {
     let id = req.params.id;
     // find Last Admited
+    
     // remove student ID from Batch
-
     // update student due in Student
 
     // finally delete admission

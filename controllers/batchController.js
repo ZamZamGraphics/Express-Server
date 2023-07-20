@@ -19,7 +19,8 @@ const allBatches = async (req, res) => {
     };
     search = search ? searchQuery : {};
     const batches = await Batch.find(search)
-      .populate({ path: "course" })
+      .populate({ path: "course", select: "name courseType" })
+      .populate({ path: "student", select: "studentId fullName" })
       .select({
         __v: 0,
       })
@@ -36,7 +37,10 @@ const allBatches = async (req, res) => {
 const batchById = async (req, res) => {
   try {
     let id = req.params.id;
-    const batch = await Batch.findById(id).select({ __v: 0 });
+    const batch = await Batch.findById(id)
+      .populate({ path: "course", select: "name courseType" })
+      .populate({ path: "student", select: "studentId fullName" })
+      .select({ __v: 0 });
     res.status(200).json(batch);
   } catch (error) {
     serverError(res, error);
