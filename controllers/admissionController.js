@@ -184,13 +184,46 @@ const deleteAdmission = async (req, res) => {
   try {
     let id = req.params.id;
     // find Last Admited
-    
-    // remove student ID from Batch
-    // update student due in Student
+    const lastAdmited = await Admission.findOne()
+      .sort({ createdAt: -1 })
+      .limit(1);
+    const admission = await Admission.findById(id);
+    const student = await Student.findById({ _id: admission.student._id });
+    const batch = await Batch.findById({ _id: admission.batch._id });
+
+    if (JSON.stringify(lastAdmited._id) !== JSON.stringify(admission._id)) {
+      return resourceError(res, {
+        message: "This admission cannot be deleted!",
+      });
+    }
+
+    // update student due
+    if (admission.paymentType == "New") {
+      await Student.findByIdAndUpdate(
+        { _id: student._id },
+        {
+          $pull: { admission: admission._id },
+          $set: { totalDues: admission.due - student.totalDues },
+        }
+      );
+
+      // remove student ID from Batch
+      await Batch.findByIdAndUpdate(
+        { _id: batch._id },
+        { $pull: { student: student._id } }
+      );
+    } else if (admission.paymentType == "Payment") {
+      await Student.findByIdAndUpdate(
+        { _id: student._id },
+        {
+          $set: { totalDues: admission.payment + student.totalDues },
+        }
+      );
+    }
 
     // finally delete admission
+    await Admission.findByIdAndDelete(id);
 
-    // await Admission.findByIdAndDelete(id);
     res.status(200).json({ message: "Admission was deleted!" });
   } catch (error) {
     serverError(res, error);

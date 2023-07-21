@@ -1,6 +1,7 @@
 const Batch = require("../models/Batch");
 const Course = require("../models/Course");
 const Student = require("../models/Student");
+const Admission = require("../models/Admission");
 const { serverError, resourceError } = require("../utilities/error");
 
 const allBatches = async (req, res) => {
@@ -125,7 +126,26 @@ const updateBatch = async (req, res) => {
 const deleteBatch = async (req, res) => {
   try {
     let id = req.params.id;
+    const admission = await Admission.findOne({
+      batch: id,
+      paymentType: "New",
+    });
+    const student = await Student.findById({ _id: admission.student._id });
+
+    // Student due update korte hobe
+    await Student.findByIdAndUpdate(
+      { _id: student._id },
+      {
+        $pull: { admission: admission._id },
+        $set: { totalDues: 0 },
+      }
+    );
+    // delete all admission in this student ID
+    await Admission.deleteMany({ batch: id });
+
+    // finally batch delete
     await Batch.findByIdAndDelete(id);
+
     res.status(200).json({ message: "Batch was deleted!" });
   } catch (error) {
     serverError(res, error);
