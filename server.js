@@ -26,11 +26,11 @@ app.use(express.static(path.join(__dirname, "public")));
 // parse cookies
 app.use(cookieParser(COOKIE_SECRET));
 
-app.use("/api/v1/students", authenticate, require("./routers/studentRoute"));
-app.use("/api/v1/admission", authenticate, require("./routers/admissionRoute"));
-app.use("/api/v1/courses", authenticate, require("./routers/courseRoute"));
-app.use("/api/v1/batches", authenticate, require("./routers/batchRoute"));
-app.use("/api/v1/users", require("./routers/userRoute"));
+app.use("/v1/students", authenticate, require("./routers/studentRoute"));
+app.use("/v1/admission", authenticate, require("./routers/admissionRoute"));
+app.use("/v1/courses", authenticate, require("./routers/courseRoute"));
+app.use("/v1/batches", authenticate, require("./routers/batchRoute"));
+app.use("/v1/users", require("./routers/userRoute"));
 
 // API Home Route
 app.get("/", (req, res) => {
@@ -46,11 +46,7 @@ app.use((req, res, next) => {
 
 // common error handler
 app.use((err, req, res, next) => {
-  error =
-    process.env.NODE_ENV === "development"
-      ? err
-      : { message: "Internal Server Error" };
-  console.log(error);
+  error = err || { message: "500, Internal Server Error" };
   res.status(err.status || 500);
   res.json(error);
 });

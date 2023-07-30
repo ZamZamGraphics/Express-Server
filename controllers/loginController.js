@@ -132,12 +132,11 @@ const login = async (req, res, next) => {
       $or: [{ email: req.body.username }, { username: req.body.username }],
     });
 
-    if (user.status !== "Verified")
-      return resourceError(res, {
-        msg: "User not Verified",
-      });
-
     if (user && user._id) {
+      if (user.status !== "Verified")
+        return resourceError(res, {
+          msg: "User not Verified",
+        });
       const isValidPassword = await bcrypt.compare(
         req.body.password,
         user.password
@@ -168,16 +167,14 @@ const login = async (req, res, next) => {
           token: `Bearer ${token}`,
         });
       } else {
-        const errors = {
-          msg: "The username or password is incorrect! Please try again.",
-        };
-        return resourceError(res, errors);
+        return resourceError(res, {
+          msg: "The password is incorrect!",
+        });
       }
     } else {
-      const errors = {
-        msg: "The username or password is incorrect! Please try again.",
-      };
-      return resourceError(res, errors);
+      return resourceError(res, {
+        msg: "The username is incorrect!",
+      });
     }
   } catch (err) {
     return serverError(res, err);
