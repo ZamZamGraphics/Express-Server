@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const cors = require("cors");
+const corsOptions = require("./config/corsOptions");
 const path = require("path");
 const createError = require("http-errors");
 const cookieParser = require("cookie-parser");
@@ -16,7 +17,7 @@ const COOKIE_SECRET = process.env.COOKIE_SECRET || null;
 const DB_URL = process.env.MONGODB_URL || null;
 
 app.use(morgan("dev"));
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
