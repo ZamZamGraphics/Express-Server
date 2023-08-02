@@ -156,10 +156,14 @@ const login = async (req, res, next) => {
         });
 
         // set cookie
-        res.cookie("user", token, {
+        res.cookie("accessToken", token, {
           maxAge: process.env.JWT_EXPIRY,
-          httpOnly: true,
-          signed: true,
+          httpOnly: false,
+        });
+
+        res.cookie("loggedIn", true, {
+          maxAge: process.env.JWT_EXPIRY,
+          httpOnly: false,
         });
 
         res.status(200).json({
