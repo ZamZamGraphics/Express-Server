@@ -33,6 +33,18 @@ const allUser = async (req, res) => {
   }
 };
 
+const userProfile = async (req, res) => {
+  try {
+    let id = req.user.userid;
+    const user = await User.findById(id).select({
+      __v: 0,
+    });
+    res.status(200).json(user);
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
 const userById = async (req, res) => {
   try {
     let id = req.params.id;
@@ -132,6 +144,7 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
   allUser,
+  userProfile,
   userById,
   register,
   updateUser,

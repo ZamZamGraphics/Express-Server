@@ -13,6 +13,7 @@ const {
   userById,
   updateUser,
   deleteUser,
+  userProfile,
 } = require("../controllers/userController");
 const {
   doLoginValidators,
@@ -49,6 +50,7 @@ router.post("/login", doLoginValidators, doLoginValidationHandler, login);
 
 //privet route
 router.get("/", authenticate, allUser);
+router.get("/profile", authenticate, userProfile);
 router.get("/:id", authenticate, userById);
 
 router.post(
