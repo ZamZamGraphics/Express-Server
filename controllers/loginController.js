@@ -70,6 +70,7 @@ const forgotPassowrd = async (req, res, next) => {
 
       res.status(200).json({
         msg: "Check your email to reset password",
+        fullname: user.fullname,
         userId: user._id,
         token,
       });
