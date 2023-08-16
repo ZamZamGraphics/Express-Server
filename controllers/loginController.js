@@ -25,6 +25,7 @@ const verification = async (req, res, next) => {
       res.status(200).json({
         success: true,
         msg: "Verification successful",
+        email,
       });
     } else {
       resourceError(res, { msg: "User not exist or email is incorrect!" });
@@ -50,6 +51,7 @@ const resendVerification = async (req, res, next) => {
       res.status(200).json({
         msg: "Resend Verification code",
         token,
+        email,
       });
     } else {
       resourceError(res, { msg: "User not exist or email is incorrect!" });
@@ -73,6 +75,7 @@ const forgotPassowrd = async (req, res, next) => {
         fullname: user.fullname,
         userId: user._id,
         token,
+        email,
       });
     } else {
       resourceError(res, { msg: "User not exist or email is incorrect!" });
@@ -112,6 +115,7 @@ const resetPassword = async (req, res, next) => {
         res.status(200).json({
           success: true,
           msg: "Password has been successfully changed",
+          email: user.email,
         });
       } catch (error) {
         serverError(res, error);
