@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/almadina/server.almadinait.com/
+    - /bin/cp /server.almadinait.com/* $DEPLOYPATH
