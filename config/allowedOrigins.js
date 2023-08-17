@@ -1,5 +1,3 @@
-const dotenv = require("dotenv");
-dotenv.config();
-const allowedOrigins = [process.env.API_URL, process.env.APP_URL];
+const allowedOrigins = ["https://server.almadinait.com", "http://localhost:3000"];
 
 module.exports = allowedOrigins;
