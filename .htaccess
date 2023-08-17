@@ -1,13 +1,18 @@
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+
 PassengerAppRoot "/home/almadina/server.almadinait.com"
 PassengerBaseURI "/"
 PassengerNodejs "/home/almadina/nodevenv/server.almadinait.com/16/bin/node"
 PassengerAppType node
 PassengerStartupFile server.js
+
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
 # DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+
 <IfModule Litespeed>
-SetEnv APP_URL https://server.almadinait.com
+SetEnv API_URL https://server.almadinait.com
+SetEnv APP_URL http://localhost:3000
 SetEnv PORT 4260
 SetEnv MONGODB_URL mongodb+srv://zamzam:13q2H50pGDRVFEhi@cluster0.4kk2zb3.mongodb.net/aitApp?retryWrites=true&w=majority
 SetEnv COOKIE_NAME user
