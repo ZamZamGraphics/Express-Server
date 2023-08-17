@@ -1,7 +1,7 @@
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
 PassengerAppRoot "/home/almadina/server.almadinait.com"
 PassengerBaseURI "/"
-PassengerNodejs "/home/almadina/nodevenv/server.almadinait.com/16/bin/node"
+PassengerNodejs "/home/almadina/nodevenv/server.almadinait.com/18/bin/node"
 PassengerAppType node
 PassengerStartupFile server.js
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
@@ -14,6 +14,6 @@ SetEnv JWT_EXPIRY 86400000
 SetEnv JWT_SECRET 6b190ec5db2ebb21a2ded6881d93c5db49c94d39
 SetEnv MONGODB_URL mongodb+srv://zamzam:13q2H50pGDRVFEhi@cluster0.4kk2zb3.mongodb.net/aitApp?retryWrites=true&w=majority
 SetEnv PORT 4260
-SetEnv APP_URL https://almadinait.com
+SetEnv APP_URL http://localhost:3000
 </IfModule>
 # DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
