@@ -70,12 +70,12 @@ const forgotPassowrd = async (req, res, next) => {
       const token = crypto.randomBytes(32).toString("hex");
       await User.updateOne({ email }, { $set: { token } });
 
+      // user._id, token, email
+      // send reset link with token to user email
+
       res.status(200).json({
+        success: true,
         msg: "Check your email to reset password",
-        fullname: user.fullname,
-        userId: user._id,
-        token,
-        email,
       });
     } else {
       resourceError(res, { msg: "User not exist or email is incorrect!" });
@@ -112,10 +112,11 @@ const resetPassword = async (req, res, next) => {
           { $set: { password: hash, token: null } }
         );
 
+        // send email to user.email
+
         res.status(200).json({
           success: true,
           msg: "Password has been successfully changed",
-          email: user.email,
         });
       } catch (error) {
         serverError(res, error);

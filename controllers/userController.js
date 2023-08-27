@@ -60,6 +60,8 @@ const userById = async (req, res) => {
 const register = (req, res) => {
   let { fullname, username, email, password, status, avatar, role } = req.body;
 
+  console.log(req.file);
+
   bcrypt.hash(password, 11, async (err, hash) => {
     if (err) {
       return resourceError(res, "Server Error Occurred");
@@ -80,10 +82,10 @@ const register = (req, res) => {
         avatar,
         role,
       });
-      const newUser = await user.save();
+      // const newUser = await user.save();
       res.status(201).json({
         message: "User Created Successfully",
-        newUser,
+        // newUser,
       });
     } catch (error) {
       serverError(res, error);

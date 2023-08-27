@@ -31,6 +31,7 @@ const {
   resetPasswordValidators,
   resetPasswordValidationHandler,
 } = require("../validator/resetPasswordValidator");
+const uploadAvatar = require("../middleware/uploadAvatar");
 
 // public route
 router.get("/verify", verification);
@@ -58,8 +59,10 @@ router.post(
   authenticate,
   userValidators,
   userValidationHandler,
+  uploadAvatar,
   register
 );
+
 router.patch(
   "/:id",
   authenticate,
