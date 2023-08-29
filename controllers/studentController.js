@@ -1,7 +1,9 @@
 const Student = require("../models/Student");
 const Admission = require("../models/Admission");
 const Batch = require("../models/Batch");
-const { serverError } = require("../utilities/error");
+const { serverError, resourceError } = require("../utilities/error");
+const path = require("path");
+const { unlink } = require("fs");
 
 const allStudents = async (req, res) => {
   try {
@@ -66,11 +68,23 @@ const register = async (req, res) => {
       .sort({ registeredAt: -1 })
       .limit(1);
     const { studentId: newID } = studentId || { studentId: 201886 }; // Last Student Id Number
-    const newStudent = new Student({
-      ...req.body,
-      studentId: Math.floor(newID) + 1,
-      user: req.user.userid,
-    });
+
+    let newStudent;
+    if (req.files && req.files.length > 0) {
+      newStudent = new Student({
+        ...req.body,
+        studentId: Math.floor(newID) + 1,
+        user: req.user.userid,
+        avatar: req.files[0].filename,
+      });
+    } else {
+      newStudent = new Student({
+        ...req.body,
+        studentId: Math.floor(newID) + 1,
+        user: req.user.userid,
+      });
+    }
+
     const student = await newStudent.save();
     res.status(201).json({
       message: "New Student Register",
@@ -84,6 +98,23 @@ const register = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     let { id } = req.params;
+
+    let avatar = null;
+    if (req.files && req.files.length > 0) {
+      avatar = req.files[0].filename;
+    }
+
+    /*
+    // check new avatar and remove old avatar 
+    if (user.avatar) {
+      unlink(
+        path.join(__dirname, `/../public/upload/${user.avatar}`),
+        (err) => {
+          if (err) resourceError(res, err);
+        }
+      );
+    }
+    */
     const updateData = await Student.findByIdAndUpdate(
       id,
       { $set: req.body },
@@ -102,6 +133,18 @@ const updateStudent = async (req, res) => {
 const deleteStudent = async (req, res) => {
   try {
     let id = req.params.id;
+
+    const student = await Student.findById(id);
+
+    // remove uploaded files
+    if (student.avatar) {
+      unlink(
+        path.join(__dirname, `/../public/upload/${student.avatar}`),
+        (err) => {
+          if (err) resourceError(res, err);
+        }
+      );
+    }
 
     // delete all admission in this student ID
     await Admission.deleteMany({ student: id });

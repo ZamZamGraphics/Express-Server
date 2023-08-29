@@ -1,6 +1,8 @@
 const { check, validationResult } = require("express-validator");
 const { resourceError } = require("../utilities/error");
 const User = require("../models/User");
+const path = require("path");
+const { unlink } = require("fs");
 
 // user validator
 const userUpdateValidators = [
@@ -41,10 +43,21 @@ const userUpdateValidators = [
 
 const userUpdateValidationHandler = (req, res, next) => {
   const errors = validationResult(req);
-  if (errors.isEmpty()) {
-    return next();
+  const mappedErrors = errors.mapped();
+  if (Object.keys(mappedErrors).length === 0) {
+    next();
+  } else {
+    // remove uploaded files
+    /*
+    if (req.files.length > 0) {
+      const { filename } = req.files[0];
+      unlink(path.join(__dirname, `/../public/upload/${filename}`), (err) => {
+        if (err) resourceError(res, err);
+      });
+    }
+    */
+    return resourceError(res, mappedErrors);
   }
-  return resourceError(res, errors.array());
 };
 
 module.exports = {

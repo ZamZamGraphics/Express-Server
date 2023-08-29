@@ -30,7 +30,7 @@ const batchUpdateValidationHandler = (req, res, next) => {
   if (errors.isEmpty()) {
     return next();
   }
-  return resourceError(res, errors.array());
+  return resourceError(res, errors.mapped());
 };
 
 module.exports = {
