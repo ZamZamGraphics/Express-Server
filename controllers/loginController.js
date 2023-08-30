@@ -22,17 +22,19 @@ const verification = async (req, res, next) => {
           },
         }
       );
+
+      // send email to Verification successful
+
       res.status(200).json({
         success: true,
-        msg: "Verification successful",
-        email,
+        message: "Verification successful",
       });
     } else {
-      resourceError(res, { msg: "User not exist or email is incorrect!" });
+      resourceError(res, { message: "User not exist or email is incorrect!" });
     }
   } catch (err) {
     return resourceError(res, {
-      msg: "The Verification Token Has Expired or is invalid!",
+      message: "The Verification Token Has Expired or is invalid!",
       err,
     });
   }
@@ -48,13 +50,14 @@ const resendVerification = async (req, res, next) => {
         expiresIn: 60,
       });
       await User.updateOne({ email }, { $set: { token } });
+
+      // send email to Resend Verification code
       res.status(200).json({
-        msg: "Resend Verification code",
-        token,
-        email,
+        success: true,
+        message: "Resend Verification code",
       });
     } else {
-      resourceError(res, { msg: "User not exist or email is incorrect!" });
+      resourceError(res, { message: "User not exist or email is incorrect!" });
     }
   } catch (error) {
     serverError(res, error);
@@ -75,10 +78,10 @@ const forgotPassowrd = async (req, res, next) => {
 
       res.status(200).json({
         success: true,
-        msg: "Check your email to reset password",
+        message: "Check your email to reset password",
       });
     } else {
-      resourceError(res, { msg: "User not exist or email is incorrect!" });
+      resourceError(res, { message: "User not exist or email is incorrect!" });
     }
   } catch (error) {
     serverError(res, error);
@@ -92,13 +95,13 @@ const resetPassword = async (req, res, next) => {
     const user = await User.findById(id);
     if (!user)
       return resourceError(res, {
-        msg: "The Reset Token Has Expired or is invalid!",
+        message: "The Reset Token Has Expired or is invalid!",
       });
 
     const validateToken = await User.findOne({ _id: id, token });
     if (!validateToken)
       return resourceError(res, {
-        msg: "The Reset Token Has Expired or is invalid!",
+        message: "The Reset Token Has Expired or is invalid!",
       });
 
     bcrypt.hash(req.body.password, 11, async (err, hash) => {
@@ -116,7 +119,7 @@ const resetPassword = async (req, res, next) => {
 
         res.status(200).json({
           success: true,
-          msg: "Password has been successfully changed",
+          message: "Password has been successfully changed",
         });
       } catch (error) {
         serverError(res, error);
@@ -124,7 +127,7 @@ const resetPassword = async (req, res, next) => {
     });
   } catch (err) {
     return resourceError(res, {
-      msg: "The Reset Token Has Expired or is invalid!",
+      message: "The Reset Token Has Expired or is invalid!",
       err,
     });
   }
@@ -141,7 +144,7 @@ const login = async (req, res, next) => {
     if (user && user._id) {
       if (user.status !== "Verified")
         return resourceError(res, {
-          msg: "User not Verified",
+          message: "User not Verified",
         });
       const isValidPassword = await bcrypt.compare(
         req.body.password,
@@ -178,12 +181,12 @@ const login = async (req, res, next) => {
         });
       } else {
         return resourceError(res, {
-          msg: "The password is incorrect!",
+          message: "The password is incorrect!",
         });
       }
     } else {
       return resourceError(res, {
-        msg: "The username is incorrect!",
+        message: "The username is incorrect!",
       });
     }
   } catch (err) {

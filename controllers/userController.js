@@ -83,10 +83,13 @@ const register = async (req, res) => {
       });
     }
 
-    const result = await newUser.save();
+    await newUser.save();
+
+    // send email to verify account
+
     res.status(201).json({
-      message: "User Created Successfully",
-      result,
+      success: true,
+      message: "Check user email to activate the account",
     });
   } catch (error) {
     serverError(res, error);
@@ -100,22 +103,19 @@ const updateUser = async (req, res) => {
 
     let { fullname, email, password, status, role } = req.body;
 
-    let avatar = null;
+    let avatar = user.avatar;
     if (req.files && req.files.length > 0) {
-      avatar = req.files[0].filename;
+      if (user.avatar !== req.files[0].filename) {
+        // remove old avatar
+        unlink(
+          path.join(__dirname, `/../public/upload/${user.avatar}`),
+          (err) => {
+            if (err) resourceError(res, err);
+          }
+        );
+        avatar = req.files[0].filename;
+      }
     }
-
-    /*
-    // check new avatar and remove old avatar 
-    if (user.avatar) {
-      unlink(
-        path.join(__dirname, `/../public/upload/${user.avatar}`),
-        (err) => {
-          if (err) resourceError(res, err);
-        }
-      );
-    }
-    */
 
     let newPassword;
 
@@ -127,9 +127,12 @@ const updateUser = async (req, res) => {
       newPassword = match ? user.password : hash;
     }
 
-    let updatedUser = {
+    if (email !== user.email) {
+      //send email to verify new email
+    }
+
+    const updatedUser = {
       fullname,
-      email,
       password: newPassword,
       status,
       avatar,
@@ -143,8 +146,8 @@ const updateUser = async (req, res) => {
     );
 
     res.status(200).json({
+      success: true,
       message: "User was updated successfully",
-      updateData,
     });
   } catch (error) {
     serverError(res, error);
