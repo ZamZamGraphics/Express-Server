@@ -48,14 +48,12 @@ const userUpdateValidationHandler = (req, res, next) => {
     next();
   } else {
     // remove uploaded files
-    /*
     if (req.files.length > 0) {
       const { filename } = req.files[0];
       unlink(path.join(__dirname, `/../public/upload/${filename}`), (err) => {
         if (err) resourceError(res, err);
       });
     }
-    */
     return resourceError(res, mappedErrors);
   }
 };

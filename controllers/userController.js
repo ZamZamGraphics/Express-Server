@@ -101,7 +101,9 @@ const updateUser = async (req, res) => {
     let id = req.params.id;
     const user = await User.findById(id);
 
-    let { fullname, email, password, status, role } = req.body;
+    let { fullname, email, status, role } = req.body;
+
+    let { password } = req.body || "";
 
     let avatar = user.avatar;
     if (req.files && req.files.length > 0) {

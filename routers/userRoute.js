@@ -66,6 +66,7 @@ router.post(
 router.patch(
   "/:id",
   authenticate,
+  avatarUpload,
   userUpdateValidators,
   userUpdateValidationHandler,
   updateUser
