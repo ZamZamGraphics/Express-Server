@@ -19,6 +19,7 @@ const allAdmission = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
+    const total = await Admission.count(search);
     const admission = await Admission.find(search)
       .populate({
         path: "student",
@@ -34,7 +35,7 @@ const allAdmission = async (req, res) => {
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
       .sort({ createdAt: -1 }); // Last User is First
-    res.status(200).json({ admission });
+    res.status(200).json({ admission, total });
   } catch (error) {
     serverError(res, error);
   }
