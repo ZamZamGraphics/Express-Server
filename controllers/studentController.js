@@ -83,6 +83,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         user: req.user.userid,
+        avatar: null,
       });
     }
 

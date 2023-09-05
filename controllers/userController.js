@@ -82,6 +82,7 @@ const register = async (req, res) => {
         ...req.body,
         password: hashedPassword,
         token,
+        avatar: null,
       });
     }
 
@@ -109,7 +110,7 @@ const updateUser = async (req, res) => {
 
     let avatar = user.avatar;
     if (req.files && req.files.length > 0) {
-      if (user.avatar !== req.files[0].filename) {
+      if (user.avatar && user.avatar !== req.files[0].filename) {
         // remove old avatar
         unlink(
           path.join(__dirname, `/../public/upload/${user.avatar}`),
