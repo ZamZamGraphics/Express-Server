@@ -4,6 +4,7 @@ const User = require("../models/User");
 const { serverError, resourceError } = require("../utilities/error");
 const path = require("path");
 const { unlink } = require("fs");
+const { resendVerification } = require("./loginController");
 
 const allUser = async (req, res) => {
   try {
@@ -123,6 +124,7 @@ const updateUser = async (req, res) => {
     }
 
     let newPassword;
+    const { userid } = req.user;
 
     if (!password || password.length === 0) {
       newPassword = user.password;
@@ -130,19 +132,43 @@ const updateUser = async (req, res) => {
       const match = await bcrypt.compare(password, user.password);
       const hash = bcrypt.hashSync(password, 11);
       newPassword = match ? user.password : hash;
+      if (userid === id) {
+        res.clearCookie("accessToken");
+        res.clearCookie("loggedIn");
+      }
     }
 
+    let updatedUser = {};
+    let newEmail = false;
     if (email !== user.email) {
-      //send email to verify new email
-    }
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: 60,
+      });
+      // send email to Resend Verification code
+      newEmail = "Please verify your email address";
+      updatedUser = {
+        fullname,
+        email,
+        password: newPassword,
+        status: "Unverified",
+        avatar,
+        role,
+        token,
+      };
 
-    const updatedUser = {
-      fullname,
-      password: newPassword,
-      status,
-      avatar,
-      role,
-    };
+      if (userid === id) {
+        res.clearCookie("accessToken");
+        res.clearCookie("loggedIn");
+      }
+    } else {
+      updatedUser = {
+        fullname,
+        password: newPassword,
+        status,
+        avatar,
+        role,
+      };
+    }
 
     const updateData = await User.findByIdAndUpdate(
       id,
@@ -152,6 +178,7 @@ const updateUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      newEmail,
       message: "User was updated successfully",
     });
   } catch (error) {

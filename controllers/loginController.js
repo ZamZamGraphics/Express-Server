@@ -54,7 +54,7 @@ const resendVerification = async (req, res, next) => {
       // send email to Resend Verification code
       res.status(200).json({
         success: true,
-        message: "Resend Verification code",
+        message: "Resend Verification token",
       });
     } else {
       resourceError(res, { message: "User not exist or email is incorrect!" });
