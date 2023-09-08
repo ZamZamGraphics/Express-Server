@@ -87,13 +87,14 @@ const register = async (req, res) => {
       });
     }
 
-    await newUser.save();
+    const user = await newUser.save();
 
     // send email to verify account
 
     res.status(201).json({
       success: true,
       message: "Check user email to activate the account",
+      user,
     });
   } catch (error) {
     serverError(res, error);
@@ -111,7 +112,7 @@ const updateUser = async (req, res) => {
 
     let avatar = user.avatar;
     if (req.files && req.files.length > 0) {
-      if (user.avatar && user.avatar !== req.files[0].filename) {
+      if (avatar !== null && avatar !== req.files[0].filename) {
         // remove old avatar
         unlink(
           path.join(__dirname, `/../public/upload/${user.avatar}`),
@@ -119,8 +120,8 @@ const updateUser = async (req, res) => {
             if (err) resourceError(res, err);
           }
         );
-        avatar = req.files[0].filename;
       }
+      avatar = req.files[0].filename;
     }
 
     let newPassword;
@@ -138,7 +139,7 @@ const updateUser = async (req, res) => {
       }
     }
 
-    let updatedUser = {};
+    let updatedData = {};
     let newEmail = false;
     if (email !== user.email) {
       const token = jwt.sign({ email }, process.env.JWT_SECRET, {
@@ -146,7 +147,7 @@ const updateUser = async (req, res) => {
       });
       // send email to Resend Verification code
       newEmail = "Please verify your email address";
-      updatedUser = {
+      updatedData = {
         fullname,
         email,
         password: newPassword,
@@ -161,7 +162,7 @@ const updateUser = async (req, res) => {
         res.clearCookie("loggedIn");
       }
     } else {
-      updatedUser = {
+      updatedData = {
         fullname,
         password: newPassword,
         status,
@@ -170,9 +171,9 @@ const updateUser = async (req, res) => {
       };
     }
 
-    const updateData = await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       id,
-      { $set: updatedUser },
+      { $set: updatedData },
       { new: true }
     );
 
@@ -180,6 +181,7 @@ const updateUser = async (req, res) => {
       success: true,
       newEmail,
       message: "User was updated successfully",
+      user: updatedUser,
     });
   } catch (error) {
     serverError(res, error);
