@@ -2,9 +2,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { serverError, resourceError } = require("../utilities/error");
+const sendEmail = require("../utilities/sendEmail");
+const ejs = require("ejs");
 const path = require("path");
 const { unlink } = require("fs");
-const { resendVerification } = require("./loginController");
 
 const allUser = async (req, res) => {
   try {
@@ -68,7 +69,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, 11);
     // Generate token by jsonwebtoken and send mail to verify user email
     const token = jwt.sign({ email: req.body.email }, process.env.JWT_SECRET, {
-      expiresIn: 60,
+      expiresIn: 60 * 5,
     });
 
     if (req.files && req.files.length > 0) {
@@ -90,6 +91,29 @@ const register = async (req, res) => {
     const user = await newUser.save();
 
     // send email to verify account
+    const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
+
+    const data = await ejs.renderFile(
+      __dirname + "../../views/resendVerification.ejs",
+      {
+        sitename: process.env.SITE_NAME,
+        fullname: user.fullname,
+        url: generateURL,
+      }
+    );
+
+    await sendEmail({
+      to: user.email,
+      subject: "Verify Your Email Address to activate the account",
+      html: data,
+      attachments: [
+        {
+          filename: "logo.png",
+          path: path.join(__dirname, `/../public/assets/logo.png`),
+          cid: "headerLogo",
+        },
+      ],
+    });
 
     res.status(201).json({
       success: true,
@@ -143,9 +167,33 @@ const updateUser = async (req, res) => {
     let newEmail = false;
     if (email !== user.email) {
       const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: 60,
+        expiresIn: 60 * 5,
       });
       // send email to Resend Verification code
+      const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
+
+      const data = await ejs.renderFile(
+        __dirname + "../../views/resendVerification.ejs",
+        {
+          sitename: process.env.SITE_NAME,
+          fullname: user.fullname,
+          url: generateURL,
+        }
+      );
+
+      await sendEmail({
+        to: email,
+        subject: "Verify Your Email Address to activate the account",
+        html: data,
+        attachments: [
+          {
+            filename: "logo.png",
+            path: path.join(__dirname, `/../public/assets/logo.png`),
+            cid: "headerLogo",
+          },
+        ],
+      });
+
       newEmail = "Please verify your email address";
       updatedData = {
         fullname,

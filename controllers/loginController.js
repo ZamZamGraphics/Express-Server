@@ -5,6 +5,7 @@ const User = require("../models/User");
 const { serverError, resourceError } = require("../utilities/error");
 const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
+const path = require("path");
 
 // verify token
 const verification = async (req, res, next) => {
@@ -26,6 +27,26 @@ const verification = async (req, res, next) => {
       );
 
       // send email to Verification successful
+      const data = await ejs.renderFile(
+        __dirname + "../../views/accountVerified.ejs",
+        {
+          sitename: process.env.SITE_NAME,
+          fullname: user.fullname,
+        }
+      );
+
+      await sendEmail({
+        to: user.email,
+        subject: "Account Verified",
+        html: data,
+        attachments: [
+          {
+            filename: "logo.png",
+            path: path.join(__dirname, `/../public/assets/logo.png`),
+            cid: "headerLogo",
+          },
+        ],
+      });
 
       res.status(200).json({
         success: true,
@@ -49,11 +70,35 @@ const resendVerification = async (req, res, next) => {
     const user = await User.findOne({ email });
     if (user) {
       const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: 60,
+        expiresIn: 60 * 5,
       });
       await User.updateOne({ email }, { $set: { token } });
 
       // send email to Resend Verification code
+      const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
+
+      const data = await ejs.renderFile(
+        __dirname + "../../views/resendVerification.ejs",
+        {
+          sitename: process.env.SITE_NAME,
+          fullname: user.fullname,
+          url: generateURL,
+        }
+      );
+
+      await sendEmail({
+        to: email,
+        subject: "Verify Your Email Address to activate the account",
+        html: data,
+        attachments: [
+          {
+            filename: "logo.png",
+            path: path.join(__dirname, `/../public/assets/logo.png`),
+            cid: "headerLogo",
+          },
+        ],
+      });
+
       res.status(200).json({
         success: true,
         message: "Resend Verification token",
@@ -91,6 +136,13 @@ const forgotPassowrd = async (req, res, next) => {
         to: email,
         subject: "Reset your Password",
         html: data,
+        attachments: [
+          {
+            filename: "logo.png",
+            path: path.join(__dirname, `/../public/assets/logo.png`),
+            cid: "headerLogo",
+          },
+        ],
       });
       res.status(200).json({
         success: true,
@@ -132,6 +184,26 @@ const resetPassword = async (req, res, next) => {
         );
 
         // send email to user.email
+        const data = await ejs.renderFile(
+          __dirname + "../../views/passwordChanged.ejs",
+          {
+            sitename: process.env.SITE_NAME,
+            fullname: user.fullname,
+          }
+        );
+
+        await sendEmail({
+          to: user.email,
+          subject: "Password changed successfully",
+          html: data,
+          attachments: [
+            {
+              filename: "logo.png",
+              path: path.join(__dirname, `/../public/assets/logo.png`),
+              cid: "headerLogo",
+            },
+          ],
+        });
 
         res.status(200).json({
           success: true,
