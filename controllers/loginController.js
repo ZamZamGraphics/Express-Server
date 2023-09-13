@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { serverError, resourceError } = require("../utilities/error");
+const sendEmail = require("../utilities/sendEmail");
+const ejs = require("ejs");
 
 // verify token
 const verification = async (req, res, next) => {
@@ -73,9 +75,23 @@ const forgotPassowrd = async (req, res, next) => {
       const token = crypto.randomBytes(32).toString("hex");
       await User.updateOne({ email }, { $set: { token } });
 
-      // user._id, token, email
       // send reset link with token to user email
+      const generateURL = `${process.env.APP_URL}/reset?token=${token}&id=${user._id}`;
 
+      const data = await ejs.renderFile(
+        __dirname + "../../views/resetPassword.ejs",
+        {
+          sitename: process.env.SITE_NAME,
+          fullname: user.fullname,
+          url: generateURL,
+        }
+      );
+
+      await sendEmail({
+        to: email,
+        subject: "Reset your Password",
+        html: data,
+      });
       res.status(200).json({
         success: true,
         message: "Check your email to reset password",

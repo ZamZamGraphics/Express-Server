@@ -44,6 +44,9 @@ app.get("/", (req, res) => {
   });
 });
 
+// setting view engine to ejs
+app.set("view engine", "ejs");
+
 // 404 not found handler
 app.use((req, res, next) => {
   next(createError(404, "Your requested content was not found!"));
@@ -57,7 +60,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`SERVER is RUNNING ON PORT ${PORT}`);
+  console.log(`SERVER is RUNNING http://localhost:${PORT}`);
   mongoose
     .connect(DB_URL)
     .then(() => console.log("Database connection successful!"))
