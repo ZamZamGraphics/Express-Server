@@ -36,6 +36,7 @@ app.use("/v1/admission", authenticate, require("./routers/admissionRoute"));
 app.use("/v1/courses", authenticate, require("./routers/courseRoute"));
 app.use("/v1/batches", authenticate, require("./routers/batchRoute"));
 app.use("/v1/users", require("./routers/userRoute"));
+app.use("/v1/settings", authenticate, require("./routers/settingsRoute"));
 
 // API Home Route
 app.get("/", (req, res) => {

@@ -7,10 +7,7 @@ const courseValidators = [
     .isLength({ min: 3 })
     .withMessage("Course Name is required")
     .trim(),
-  check("slug")
-    .isLength({ min: 3 })
-    .withMessage("Fathers Name is required")
-    .trim(),
+  check("slug").isLength({ min: 3 }).withMessage("Slug is required").trim(),
   check("courseType")
     .isLength({ min: 1 })
     .withMessage("Course Type is required")

@@ -11,20 +11,12 @@ const smtpOptions = {
   },
 };
 
-const sendEmail = async (data) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      ...smtpOptions,
-    });
-
-    await transporter.sendMail({
-      from: `${process.env.SITE_NAME} ${process.env.EMAIL_USERNAME}`,
-      ...data,
-    });
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.response };
-  }
+const sendEmail = (data) => {
+  const transporter = nodemailer.createTransport(smtpOptions);
+  return transporter.sendMail({
+    from: `${process.env.SITE_NAME} ${process.env.EMAIL_USERNAME}`,
+    ...data,
+  });
 };
 
 module.exports = sendEmail;
