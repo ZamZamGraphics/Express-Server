@@ -91,6 +91,7 @@ const updatedEmail = async (req, res) => {
 
     res.status(200).json({
       message: "Email was updated successfully",
+      success: true,
       result,
     });
   } catch (err) {
