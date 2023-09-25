@@ -2,6 +2,7 @@ const Student = require("../models/Student");
 const Admission = require("../models/Admission");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
+const validMobileNumber = require("../utilities/validMobileNumber");
 const path = require("path");
 const { unlink } = require("fs");
 
@@ -33,7 +34,7 @@ const allStudents = async (req, res) => {
     };
     search = search ? searchQuery : {};
     const total = await Student.count(search);
-    const student = await Student.find(search)
+    const students = await Student.find(search)
       .populate({ path: "user", select: "fullname" })
       .populate({ path: "admission", select: "course batch" })
       .select({
@@ -43,7 +44,7 @@ const allStudents = async (req, res) => {
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
       .sort({ registeredAt: -1 }); // Last User is First
-    res.status(200).json({ student, total });
+    res.status(200).json({ students, total });
   } catch (error) {
     serverError(res, error);
   }
@@ -69,12 +70,14 @@ const register = async (req, res) => {
       .sort({ registeredAt: -1 })
       .limit(1);
     const { studentId: newID } = studentId || { studentId: 201886 }; // Last Student Id Number
-
+    const stdPhone = validMobileNumber(req.body.stdPhone);
+    const guardianPhone = validMobileNumber(req.body.guardianPhone) || "";
     let newStudent;
     if (req.files && req.files.length > 0) {
       newStudent = new Student({
         ...req.body,
         studentId: Math.floor(newID) + 1,
+        phone: [stdPhone, guardianPhone],
         user: req.user.userid,
         avatar: req.files[0].filename,
       });
@@ -82,6 +85,7 @@ const register = async (req, res) => {
       newStudent = new Student({
         ...req.body,
         studentId: Math.floor(newID) + 1,
+        phone: [stdPhone, guardianPhone],
         user: req.user.userid,
         avatar: null,
       });
@@ -100,6 +104,8 @@ const register = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     let { id } = req.params;
+    const stdPhone = validMobileNumber(req.body.stdPhone);
+    const guardianPhone = validMobileNumber(req.body.guardianPhone) || "";
 
     let avatar = null;
     if (req.files && req.files.length > 0) {
@@ -119,13 +125,13 @@ const updateStudent = async (req, res) => {
     */
     const updateData = await Student.findByIdAndUpdate(
       id,
-      { $set: req.body },
+      { $set: req.body, phone: [stdPhone, guardianPhone] },
       { new: true }
     );
 
     res.status(200).json({
       message: "Student was updated successfully",
-      updateData,
+      student: updateData,
     });
   } catch (error) {
     serverError(res, error);

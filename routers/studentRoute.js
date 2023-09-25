@@ -15,7 +15,13 @@ const {
 router.get("/", allStudents);
 router.get("/:id", studentById);
 
-router.post("/register", avatarUpload,  studentValidators, studentValidationHandler, register);
+router.post(
+  "/register",
+  avatarUpload,
+  studentValidators,
+  studentValidationHandler,
+  register
+);
 router.patch(
   "/:id",
   studentValidators,
