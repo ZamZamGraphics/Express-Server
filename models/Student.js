@@ -57,7 +57,7 @@ const studentSchema = new Schema({
   birthCertificate: String,
   bloodGroup: String,
   education: String,
-  refrence: String,
+  reference: String,
   status: {
     type: String,
     enum: ["Approved", "Pending", "Rejected"],

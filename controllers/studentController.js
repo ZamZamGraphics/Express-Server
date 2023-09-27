@@ -28,7 +28,7 @@ const allStudents = async (req, res) => {
         { birthCertificate: search },
         { bloodGroup: { $regex: search, $options: "i" } },
         { education: { $regex: search, $options: "i" } },
-        { refrence: { $regex: search, $options: "i" } },
+        { reference: { $regex: search, $options: "i" } },
         { status: search },
       ],
     };

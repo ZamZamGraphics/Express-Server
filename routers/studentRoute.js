@@ -22,12 +22,15 @@ router.post(
   studentValidationHandler,
   register
 );
+
 router.patch(
   "/:id",
+  avatarUpload,
   studentValidators,
   studentValidationHandler,
   updateStudent
 );
+
 router.delete("/:id", deleteStudent);
 
 module.exports = router;
