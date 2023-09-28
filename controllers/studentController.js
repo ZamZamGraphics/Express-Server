@@ -104,28 +104,34 @@ const register = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     let { id } = req.params;
+    const student = await Student.findById(id);
+
     const stdPhone = validMobileNumber(req.body.stdPhone);
     const guardianPhone = validMobileNumber(req.body.guardianPhone) || "";
 
-    let avatar = null;
+    let avatar = student.avatar;
     if (req.files && req.files.length > 0) {
+      if (avatar !== null && avatar !== req.files[0].filename) {
+        // check new avatar and remove old avatar
+        unlink(
+          path.join(__dirname, `/../public/upload/${student.avatar}`),
+          (err) => {
+            if (err) resourceError(res, err);
+          }
+        );
+      }
       avatar = req.files[0].filename;
     }
 
-    /*
-    // check new avatar and remove old avatar 
-    if (user.avatar) {
-      unlink(
-        path.join(__dirname, `/../public/upload/${user.avatar}`),
-        (err) => {
-          if (err) resourceError(res, err);
-        }
-      );
-    }
-    */
+    const updatedData = {
+      ...req.body,
+      avatar,
+      phone: [stdPhone, guardianPhone],
+    };
+
     const updateData = await Student.findByIdAndUpdate(
       id,
-      { $set: req.body, phone: [stdPhone, guardianPhone] },
+      { $set: updatedData },
       { new: true }
     );
 
