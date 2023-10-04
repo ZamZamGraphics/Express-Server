@@ -64,7 +64,7 @@ const updateCourse = async (req, res) => {
 
     res.status(200).json({
       message: "Course was updated successfully",
-      updateData,
+      course: updateData,
     });
   } catch (error) {
     serverError(res, error);

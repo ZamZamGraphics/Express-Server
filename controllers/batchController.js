@@ -117,7 +117,7 @@ const updateBatch = async (req, res) => {
     // update status in student collection
     res.status(200).json({
       message: "Batch was updated successfully",
-      updateData,
+      batch: updateData,
     });
   } catch (error) {
     serverError(res, error);
