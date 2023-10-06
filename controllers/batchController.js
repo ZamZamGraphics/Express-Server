@@ -13,7 +13,8 @@ const allBatches = async (req, res) => {
     const searchQuery = {
       $or: [
         { batchNo: search },
-        { status: search },
+        // { startDate: { $lt:  new Date(search) } },
+        // { endDate: { $lt: new Date(search) } },
         { classDays: { $regex: search, $options: "i" } },
         { classTime: { $regex: search, $options: "i" } },
       ],
