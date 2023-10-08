@@ -28,7 +28,11 @@ const limiter = rateLimit({
   },
 });
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.disable("x-powered-by");
 app.use(limiter);
 app.use(morgan("dev"));
