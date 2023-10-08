@@ -132,18 +132,19 @@ const deleteBatch = async (req, res) => {
       batch: id,
       paymentType: "New",
     });
-    const student = await Student.findById({ _id: admission.student._id });
-
-    // Student due update korte hobe
-    await Student.findByIdAndUpdate(
-      { _id: student._id },
-      {
-        $pull: { admission: admission._id },
-        $set: { totalDues: 0 },
-      }
-    );
-    // delete all admission in this student ID
-    await Admission.deleteMany({ batch: id });
+    if (admission) {
+      const student = await Student.findById({ _id: admission.student._id });
+      // Student due update korte hobe
+      await Student.findByIdAndUpdate(
+        { _id: student._id },
+        {
+          $pull: { admission: admission._id },
+          $set: { totalDues: 0 },
+        }
+      );
+      // delete all admission in this student ID
+      await Admission.deleteMany({ batch: id });
+    }
 
     // finally batch delete
     await Batch.findByIdAndDelete(id);
