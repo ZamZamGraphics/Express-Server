@@ -35,7 +35,7 @@ const verification = async (req, res, next) => {
         }
       );
 
-      await sendEmail({
+      sendEmail({
         to: user.email,
         subject: "Account Verified",
         html: data,
@@ -86,7 +86,7 @@ const resendVerification = async (req, res, next) => {
         }
       );
 
-      await sendEmail({
+      sendEmail({
         to: email,
         subject: "Verify Your Email Address to activate the account",
         html: data,
@@ -132,7 +132,7 @@ const forgotPassowrd = async (req, res, next) => {
         }
       );
 
-      await sendEmail({
+      sendEmail({
         to: email,
         subject: "Reset your Password",
         html: data,
@@ -192,7 +192,7 @@ const resetPassword = async (req, res, next) => {
           }
         );
 
-        await sendEmail({
+        sendEmail({
           to: user.email,
           subject: "Password changed successfully",
           html: data,

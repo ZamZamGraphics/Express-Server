@@ -90,7 +90,7 @@ const register = async (req, res) => {
       }
     );
 
-    await sendEmail({
+    sendEmail({
       to: user.email,
       subject: "Verify Your Email Address to activate the account",
       html: data,
@@ -169,7 +169,7 @@ const updateUser = async (req, res) => {
         }
       );
 
-      await sendEmail({
+      sendEmail({
         to: email,
         subject: "Verify Your Email Address to activate the account",
         html: data,

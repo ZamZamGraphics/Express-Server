@@ -37,7 +37,7 @@ const updateSettings = async (req, res) => {
         }
       );
 
-      await sendEmail({
+      sendEmail({
         to: email,
         subject: "Verify Email Address",
         html: data,
