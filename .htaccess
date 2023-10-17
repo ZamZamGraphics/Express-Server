@@ -1,10 +1,3 @@
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home/almadina/server.almadinait.com"
-PassengerBaseURI "/"
-PassengerNodejs "/home/almadina/nodevenv/server.almadinait.com/18/bin/node"
-PassengerAppType node
-PassengerStartupFile server.js
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
 # DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
 <IfModule Litespeed>
 SetEnv API_URL https://server.almadinait.com
@@ -20,6 +13,5 @@ SetEnv JWT_SECRET 6b190ec5db2ebb21a2ded6881d93c5db49c94d39
 SetEnv MONGODB_URL mongodb+srv://zamzam:13q2H50pGDRVFEhi@cluster0.4kk2zb3.mongodb.net/aitApp?retryWrites=true&w=majority
 SetEnv PORT 4260
 SetEnv SITE_NAME ALMADINA IT
-SetEnv DOMAIN .almadinait.com
 </IfModule>
 # DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
