@@ -36,12 +36,7 @@ app.use(
 app.disable("x-powered-by");
 app.use(limiter);
 app.use(morgan("dev"));
-app.use(
-  cors({
-    credentials: true,
-    origin: process.env.APP_URL || "*",
-  })
-);
+app.use(cors({ origin: process.env.APP_URL }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

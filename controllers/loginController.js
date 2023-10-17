@@ -245,6 +245,7 @@ const login = async (req, res, next) => {
           userid: user._id,
           status: user.status,
           role: user.role,
+          expiresIn: process.env.JWT_EXPIRY,
         };
 
         // generate token
@@ -252,23 +253,7 @@ const login = async (req, res, next) => {
           expiresIn: process.env.JWT_EXPIRY,
         });
 
-        // set cookie
-        res.cookie("accessToken", token, {
-          maxAge: process.env.JWT_EXPIRY,
-          httpOnly: false,
-          domain: process.env.DOMAIN,
-        });
-
-        res.cookie("loggedIn", true, {
-          maxAge: process.env.JWT_EXPIRY,
-          httpOnly: false,
-          domain: process.env.DOMAIN,
-        });
-
-        res.status(200).json({
-          success: true,
-          token: `Bearer ${token}`,
-        });
+        res.status(200).json({ success: true, token });
       } else {
         return resourceError(res, {
           message: "The password is incorrect!",
