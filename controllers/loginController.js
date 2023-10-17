@@ -256,11 +256,13 @@ const login = async (req, res, next) => {
         res.cookie("accessToken", token, {
           maxAge: process.env.JWT_EXPIRY,
           httpOnly: false,
+          domain: process.env.DOMAIN,
         });
 
         res.cookie("loggedIn", true, {
           maxAge: process.env.JWT_EXPIRY,
           httpOnly: false,
+          domain: process.env.DOMAIN,
         });
 
         res.status(200).json({

@@ -18,8 +18,8 @@ const COOKIE_SECRET = process.env.COOKIE_SECRET || null;
 const DB_URL = process.env.MONGODB_URL || null;
 
 const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  limit: 50, // Limit each IP to 5 request per windowMs
+  windowMs: 2 * 60 * 1000, // 2 minutes
+  limit: 100, // Limit each IP to 100 request per windowMs
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   handler: function (req, res) {
     return res.status(429).json({
@@ -34,7 +34,7 @@ app.use(
   })
 );
 app.disable("x-powered-by");
-// app.use(limiter);
+app.use(limiter);
 app.use(morgan("dev"));
 app.use(
   cors({
