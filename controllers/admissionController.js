@@ -117,7 +117,7 @@ const newAdmission = async (req, res) => {
       { _id: student._id },
       {
         $addToSet: { admission: admission._id },
-        $set: { totalDues: due + student.totalDues },
+        $set: { status: "Approved", totalDues: due + student.totalDues },
       }
     );
 
@@ -204,7 +204,10 @@ const deleteAdmission = async (req, res) => {
         { _id: student._id },
         {
           $pull: { admission: admission._id },
-          $set: { totalDues: admission.due - student.totalDues },
+          $set: {
+            status: "Pending",
+            totalDues: admission.due - student.totalDues,
+          },
         }
       );
 

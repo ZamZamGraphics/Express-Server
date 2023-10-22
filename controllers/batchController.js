@@ -139,7 +139,7 @@ const deleteBatch = async (req, res) => {
         { _id: student._id },
         {
           $pull: { admission: admission._id },
-          $set: { totalDues: 0 },
+          $set: { status: "Pending", totalDues: 0 },
         }
       );
       // delete all admission in this student ID
