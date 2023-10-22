@@ -128,29 +128,32 @@ const updateBatch = async (req, res) => {
 const deleteBatch = async (req, res) => {
   try {
     let id = req.params.id;
-    const admission = await Admission.findOne({
+    const admission = await Admission.find({
       batch: id,
       paymentType: "New",
     });
-    if (admission) {
-      const student = await Student.findById({ _id: admission.student._id });
+    let student = null;
+    if (admission.length > 0) {
+      const stdIds = admission.map((admission) => admission.student);
+      student = await Student.find({ _id: { $in: stdIds } });
       // Student due update korte hobe
-      await Student.findByIdAndUpdate(
-        { _id: student._id },
-        {
-          $pull: { admission: admission._id },
-          $set: { status: "Pending", totalDues: 0 },
-        }
-      );
+      // await Student.findByIdAndUpdate(
+      //   { _id: student._id },
+      //   {
+      //     $pull: { admission: admission._id },
+      //     $set: { status: "Pending", totalDues: 0 },
+      //   }
+      // );
       // delete all admission in this student ID
-      await Admission.deleteMany({ batch: id });
+      // await Admission.deleteMany({ batch: id });
     }
 
     // finally batch delete
-    await Batch.findByIdAndDelete(id);
+    // await Batch.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Batch was deleted!" });
+    res.status(200).json({ admission, student, message: "Batch was deleted!" });
   } catch (error) {
+    console.log(error);
     serverError(res, error);
   }
 };
