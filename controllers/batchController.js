@@ -86,6 +86,7 @@ const newBatch = async (req, res) => {
 const updateBatch = async (req, res) => {
   try {
     let { id } = req.params;
+    const { startDate, classDays, classTime } = req.body;
     const batch = await Batch.findById(id);
     const course = await Course.findById({ _id: batch.course });
     const duration = course.duration.split(" ")[0] * 30;
@@ -94,7 +95,7 @@ const updateBatch = async (req, res) => {
 
     const updateData = await Batch.findByIdAndUpdate(
       id,
-      { $set: { ...req.body, endDate } },
+      { $set: { startDate, classDays, classTime, endDate } },
       { new: true }
     );
     // update status in student collection
