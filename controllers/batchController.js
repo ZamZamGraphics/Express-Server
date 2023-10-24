@@ -86,33 +86,15 @@ const newBatch = async (req, res) => {
 const updateBatch = async (req, res) => {
   try {
     let { id } = req.params;
-    const { student, startDate, classDays, classTime } = req.body;
-    const ids = student.split(",");
-    const studentId = await Student.find({ studentId: { $in: ids } }).select(
-      "_id"
-    );
-
-    if (studentId === undefined || studentId.length == 0) {
-      return resourceError(res, { message: "The Student ID is Wrong!" });
-    }
-
     const batch = await Batch.findById(id);
     const course = await Course.findById({ _id: batch.course });
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date(req.body.startDate);
     const endDate = new Date(date.setDate(date.getDate() + duration));
 
-    const updatedBatch = {
-      student: studentId,
-      startDate,
-      endDate,
-      classDays,
-      classTime,
-    };
-
     const updateData = await Batch.findByIdAndUpdate(
       id,
-      { $set: updatedBatch },
+      { $set: { ...req.body, endDate } },
       { new: true }
     );
     // update status in student collection
@@ -133,25 +115,31 @@ const deleteBatch = async (req, res) => {
       paymentType: "New",
     });
     let student = null;
+    let stdIds = null;
+    let admissionIds = null;
     if (admission.length > 0) {
-      const stdIds = admission.map((admission) => admission.student);
-      student = await Student.find({ _id: { $in: stdIds } });
+      stdIds = admission.map((admission) => admission.student);
+      student = await Student.find({ _id: { $in: stdIds } }).select("_id");
+      stdIds = student.map((std) => std._id);
+
+      admissionIds = admission.map((admission) => admission._id);
       // Student due update korte hobe
-      // await Student.findByIdAndUpdate(
-      //   { _id: student._id },
-      //   {
-      //     $pull: { admission: admission._id },
-      //     $set: { status: "Pending", totalDues: 0 },
-      //   }
-      // );
-      // delete all admission in this student ID
-      // await Admission.deleteMany({ batch: id });
+      student = await Student.updateMany(
+        { _id: { $in: stdIds } },
+        {
+          $pull: { admission: { $in: admissionIds } },
+          $set: { status: "Pending", totalDues: 0 },
+        },
+        { multi: true }
+      );
+      // delete all admission in this studentIds
+      await Admission.deleteMany({ batch: id });
     }
 
     // finally batch delete
-    // await Batch.findByIdAndDelete(id);
+    await Batch.findByIdAndDelete(id);
 
-    res.status(200).json({ admission, student, message: "Batch was deleted!" });
+    res.status(200).json({ message: "Batch was deleted!" });
   } catch (error) {
     console.log(error);
     serverError(res, error);
