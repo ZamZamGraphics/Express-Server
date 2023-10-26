@@ -36,7 +36,23 @@ const allStudents = async (req, res) => {
     const total = await Student.count(search);
     const students = await Student.find(search)
       .populate({ path: "user", select: "fullname" })
-      .populate({ path: "admission", select: "course batch" })
+      // .populate({ path: "admission", select: "course batch" })
+      .populate({
+        path: "admission",
+        select: "batch",
+        populate: {
+          path: "batch",
+          select: "batchNo",
+        },
+      })
+      .populate({
+        path: "admission",
+        select: "course",
+        populate: {
+          path: "course",
+          select: "name",
+        },
+      })
       .select({
         __v: 0,
       })
@@ -55,8 +71,25 @@ const studentById = async (req, res) => {
     let id = req.params.id;
     const student = await Student.findById(id)
       .populate({ path: "user", select: "fullname" })
-      .populate({ path: "admission", select: "course batch" })
-      .select({ __v: 0 });
+      .populate({
+        path: "admission",
+        select: "batch",
+        populate: {
+          path: "batch",
+          select: "batchNo",
+        },
+      })
+      .populate({
+        path: "admission",
+        select: "course",
+        populate: {
+          path: "course",
+          select: "name",
+        },
+      })
+      .select({
+        __v: 0,
+      });
     res.status(200).json(student);
   } catch (error) {
     serverError(res, error);
@@ -123,6 +156,18 @@ const updateStudent = async (req, res) => {
       avatar = req.files[0].filename;
     }
 
+    let admission = null;
+    if (student.admission.length > 0) {
+      admission = await Admission.find({
+        _id: { $in: student.admission },
+      })
+        .populate({ path: "batch", select: "batchNo" })
+        .populate({ path: "course", select: "name" })
+        .select({
+          __v: 0,
+        });
+    }
+
     const updatedData = {
       ...req.body,
       avatar,
@@ -137,7 +182,7 @@ const updateStudent = async (req, res) => {
 
     res.status(200).json({
       message: "Student was updated successfully",
-      student: updateData,
+      student: { ...updateData, admission },
     });
   } catch (error) {
     serverError(res, error);

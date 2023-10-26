@@ -100,6 +100,9 @@ const newAdmission = async (req, res) => {
     const courseFee = course.courseFee;
     const payableAmount = courseFee - (discount || 0);
     const due = payableAmount - payment;
+    const date = new Date();
+    const nextDate = new Date(date.setDate(date.getDate() + 15));
+    const nextPay = due > 0 ? nextDate : null;
 
     const newAdmission = new Admission({
       ...req.body,
@@ -107,6 +110,7 @@ const newAdmission = async (req, res) => {
       batch: batchId,
       payableAmount,
       due,
+      nextPay,
       user: req.user.userid,
     });
 
@@ -155,6 +159,9 @@ const payment = async (req, res) => {
 
   const payableAmount = admission.due - (req.body.discount || 0);
   const due = payableAmount - req.body.payment;
+  const date = new Date();
+  const nextDate = new Date(date.setDate(date.getDate() + 15));
+  const nextPay = due > 0 ? nextDate : null;
 
   const admissionPayment = new Admission({
     ...req.body,
@@ -162,6 +169,7 @@ const payment = async (req, res) => {
     batch: batch._id,
     payableAmount,
     due,
+    nextPay,
     user: req.user.userid,
   });
   // add New admission by paymentType is payment
