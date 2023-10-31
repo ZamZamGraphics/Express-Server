@@ -2,6 +2,7 @@ const router = require("express").Router();
 const {
   allStudents,
   studentById,
+  studentByStudentId,
   register,
   updateStudent,
   deleteStudent,
@@ -14,6 +15,7 @@ const {
 
 router.get("/", allStudents);
 router.get("/:id", studentById);
+router.get("/verify/:studentId", studentByStudentId);
 
 router.post(
   "/register",

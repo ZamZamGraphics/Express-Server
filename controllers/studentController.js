@@ -30,28 +30,29 @@ const allStudents = async (req, res) => {
         { education: { $regex: search, $options: "i" } },
         { reference: { $regex: search, $options: "i" } },
         { status: search },
+        { "admission.batch": { $lt: { _id: search } } },
       ],
     };
     search = search ? searchQuery : {};
     const total = await Student.count(search);
     const students = await Student.find(search)
       .populate({ path: "user", select: "fullname" })
-      // .populate({ path: "admission", select: "course batch" })
       .populate({
         path: "admission",
-        select: "batch",
-        populate: {
-          path: "batch",
-          select: "batchNo",
-        },
-      })
-      .populate({
-        path: "admission",
-        select: "course",
-        populate: {
-          path: "course",
-          select: "name",
-        },
+        model: "Admission",
+        select: "batch, course",
+        populate: [
+          {
+            path: "batch",
+            model: "Batch",
+            select: "batchNo",
+          },
+          {
+            path: "course",
+            model: "Course",
+            select: "name",
+          },
+        ],
       })
       .select({
         __v: 0,
@@ -70,6 +71,36 @@ const studentById = async (req, res) => {
   try {
     let id = req.params.id;
     const student = await Student.findById(id)
+      .populate({ path: "user", select: "fullname" })
+      .populate({
+        path: "admission",
+        select: "batch",
+        populate: {
+          path: "batch",
+          select: "batchNo",
+        },
+      })
+      .populate({
+        path: "admission",
+        select: "course",
+        populate: {
+          path: "course",
+          select: "name",
+        },
+      })
+      .select({
+        __v: 0,
+      });
+    res.status(200).json(student);
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+const studentByStudentId = async (req, res) => {
+  try {
+    let id = req.params.studentId;
+    const student = await Student.findOne({ studentId: id })
       .populate({ path: "user", select: "fullname" })
       .populate({
         path: "admission",
@@ -228,6 +259,7 @@ const deleteStudent = async (req, res) => {
 module.exports = {
   allStudents,
   studentById,
+  studentByStudentId,
   register,
   updateStudent,
   deleteStudent,

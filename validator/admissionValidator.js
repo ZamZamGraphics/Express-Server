@@ -7,6 +7,8 @@ const admissionValidators = [
   check("student")
     .isLength({ min: 1 })
     .withMessage("Student Id is required")
+    .isNumeric()
+    .withMessage("Invalid Student Id")
     .trim(),
   check("course")
     .isLength({ min: 1 })

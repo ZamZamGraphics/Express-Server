@@ -66,6 +66,7 @@ const newAdmission = async (req, res) => {
       course: courseId,
       discount,
       payment,
+      nextPay,
       batch: batchNo,
       timeSchedule,
     } = req.body;
@@ -102,7 +103,11 @@ const newAdmission = async (req, res) => {
     const due = payableAmount - payment;
     const date = new Date();
     const nextDate = new Date(date.setDate(date.getDate() + 15));
-    const nextPay = due > 0 ? nextDate : null;
+
+    let nextPayment = nextPay;
+    if (!nextPay && due > 0) {
+      nextPayment = nextDate;
+    }
 
     const newAdmission = new Admission({
       ...req.body,
@@ -110,7 +115,7 @@ const newAdmission = async (req, res) => {
       batch: batchId,
       payableAmount,
       due,
-      nextPay,
+      nextPay: nextPayment,
       user: req.user.userid,
     });
 
