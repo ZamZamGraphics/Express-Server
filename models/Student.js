@@ -44,8 +44,6 @@ const studentSchema = new Schema({
   phone: [
     {
       type: String,
-      minlength: 11,
-      maxlength: 11,
     },
   ],
   email: {

@@ -133,9 +133,10 @@ const register = async (req, res) => {
       .select({ _id: 0, studentId: 1 })
       .sort({ registeredAt: -1 })
       .limit(1);
-    const { studentId: newID } = studentId || { studentId: 201886 }; // Last Student Id Number
+    const { studentId: newID } = studentId || { studentId: 201100 }; // Last Student Id Number
     const stdPhone = validMobileNumber(req.body.stdPhone);
     const guardianPhone = validMobileNumber(req.body.guardianPhone) || "";
+
     let newStudent;
     if (req.files && req.files.length > 0) {
       newStudent = new Student({
@@ -187,18 +188,6 @@ const updateStudent = async (req, res) => {
       avatar = req.files[0].filename;
     }
 
-    let admission = null;
-    if (student.admission.length > 0) {
-      admission = await Admission.find({
-        _id: { $in: student.admission },
-      })
-        .populate({ path: "batch", select: "batchNo" })
-        .populate({ path: "course", select: "name" })
-        .select({
-          __v: 0,
-        });
-    }
-
     const updatedData = {
       ...req.body,
       avatar,
@@ -213,7 +202,7 @@ const updateStudent = async (req, res) => {
 
     res.status(200).json({
       message: "Student was updated successfully",
-      student: { ...updateData, admission },
+      student: updateData,
     });
   } catch (error) {
     serverError(res, error);
