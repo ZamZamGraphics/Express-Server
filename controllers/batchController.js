@@ -22,8 +22,6 @@ const allBatches = async (req, res) => {
     search = search ? searchQuery : {};
     const total = await Batch.count(search);
     const batches = await Batch.find(search)
-      .populate({ path: "course", select: "name courseType" })
-      .populate({ path: "student", select: "studentId fullName" })
       .select({
         __v: 0,
       })
@@ -41,8 +39,6 @@ const batchById = async (req, res) => {
   try {
     let id = req.params.id;
     const batch = await Batch.findById(id)
-      .populate({ path: "course", select: "name courseType" })
-      .populate({ path: "student", select: "studentId fullName" })
       .select({ __v: 0 });
     res.status(200).json(batch);
   } catch (error) {
@@ -62,9 +58,7 @@ const newBatch = async (req, res) => {
       return resourceError(res, { message: "The Student ID is Wrong!" });
     }
 
-    console.log(studentId)
-    // const stdIds = studentId.map((std) => std.studentId);
-/*
+    const stdIds = studentId.map((std) => std.studentId);
     const course = await Course.findById({ _id: req.body.course });
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date(req.body.startDate);
@@ -72,16 +66,19 @@ const newBatch = async (req, res) => {
 
     const newBatch = new Batch({
       ...req.body,
-      student: studentId,
+      course: {
+        id: course._id,
+        name: course.name,
+        courseType: course.courseType
+      },
+      student: stdIds,
       endDate,
     });
     const batch = await newBatch.save();
-    */
     // create admission and update status in student collection
     res.status(201).json({
       message: "New Batch added successfully",
-      // batch,
-      studentId
+      batch,
     });
   } catch (error) {
     serverError(res, error);
@@ -116,8 +113,9 @@ const updateBatch = async (req, res) => {
 const deleteBatch = async (req, res) => {
   try {
     let id = req.params.id;
+    const batch = await Batch.findById(id)
     const admission = await Admission.find({
-      batchNo: id, // check batchNo if exist
+      batchNo: batch.batchNo,
     });
     let student = null;
     let stdIds = null;
@@ -138,7 +136,7 @@ const deleteBatch = async (req, res) => {
         { multi: true }
       );
       // delete all admission in this studentIds
-      await Admission.deleteMany({ batch: id });
+      await Admission.deleteMany({ batchNo: batch.batchNo });
     }
 
     // finally batch delete

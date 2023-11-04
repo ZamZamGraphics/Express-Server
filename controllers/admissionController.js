@@ -81,7 +81,7 @@ const newAdmission = async (req, res) => {
       // create new batch
       batchId = await createNewBatch(batchNo, course, student, timeSchedule);
     } else {
-      if (JSON.stringify(batch.course) !== JSON.stringify(courseId)) {
+      if (JSON.stringify(batch.course.id) !== JSON.stringify(courseId)) {
         return resourceError(res, { message: "Course Name did not matched!" });
       }
       batchId = batch._id;
