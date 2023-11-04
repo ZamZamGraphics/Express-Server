@@ -243,6 +243,7 @@ const login = async (req, res, next) => {
         // prepare the user object to generate token
         const userObject = {
           userid: user._id,
+          name: user.fullname,
           status: user.status,
           role: user.role,
           expiresIn: process.env.JWT_EXPIRY,

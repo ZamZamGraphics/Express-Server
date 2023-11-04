@@ -30,29 +30,15 @@ const allStudents = async (req, res) => {
         { education: { $regex: search, $options: "i" } },
         { reference: { $regex: search, $options: "i" } },
         { status: search },
-        { "admission.batch": { $lt: { _id: search } } },
+        { user: search },
       ],
     };
     search = search ? searchQuery : {};
     const total = await Student.count(search);
     const students = await Student.find(search)
-      .populate({ path: "user", select: "fullname" })
       .populate({
         path: "admission",
-        model: "Admission",
-        select: "batch, course",
-        populate: [
-          {
-            path: "batch",
-            model: "Batch",
-            select: "batchNo",
-          },
-          {
-            path: "course",
-            model: "Course",
-            select: "name",
-          },
-        ],
+        select: "batchNo course",
       })
       .select({
         __v: 0,
@@ -71,22 +57,9 @@ const studentById = async (req, res) => {
   try {
     let id = req.params.id;
     const student = await Student.findById(id)
-      .populate({ path: "user", select: "fullname" })
       .populate({
         path: "admission",
-        select: "batch",
-        populate: {
-          path: "batch",
-          select: "batchNo",
-        },
-      })
-      .populate({
-        path: "admission",
-        select: "course",
-        populate: {
-          path: "course",
-          select: "name",
-        },
+        select: "batchNo course",
       })
       .select({
         __v: 0,
@@ -101,22 +74,9 @@ const studentByStudentId = async (req, res) => {
   try {
     let id = req.params.studentId;
     const student = await Student.findOne({ studentId: id })
-      .populate({ path: "user", select: "fullname" })
       .populate({
         path: "admission",
-        select: "batch",
-        populate: {
-          path: "batch",
-          select: "batchNo",
-        },
-      })
-      .populate({
-        path: "admission",
-        select: "course",
-        populate: {
-          path: "course",
-          select: "name",
-        },
+        select: "batchNo course",
       })
       .select({
         __v: 0,
@@ -143,7 +103,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
-        user: req.user.userid,
+        user: req.user.name,
         avatar: req.files[0].filename,
       });
     } else {
@@ -151,7 +111,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
-        user: req.user.userid,
+        user: req.user.name,
         avatar: null,
       });
     }

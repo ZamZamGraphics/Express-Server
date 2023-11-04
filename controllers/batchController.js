@@ -55,13 +55,16 @@ const newBatch = async (req, res) => {
     const { student } = req.body;
     const ids = student.split(",");
     const studentId = await Student.find({ studentId: { $in: ids } }).select(
-      "_id"
+      "studentId"
     );
 
     if (studentId === undefined || studentId.length == 0) {
       return resourceError(res, { message: "The Student ID is Wrong!" });
     }
 
+    console.log(studentId)
+    // const stdIds = studentId.map((std) => std.studentId);
+/*
     const course = await Course.findById({ _id: req.body.course });
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date(req.body.startDate);
@@ -73,10 +76,12 @@ const newBatch = async (req, res) => {
       endDate,
     });
     const batch = await newBatch.save();
+    */
     // create admission and update status in student collection
     res.status(201).json({
       message: "New Batch added successfully",
-      batch,
+      // batch,
+      studentId
     });
   } catch (error) {
     serverError(res, error);
@@ -112,8 +117,7 @@ const deleteBatch = async (req, res) => {
   try {
     let id = req.params.id;
     const admission = await Admission.find({
-      batch: id,
-      paymentType: "New",
+      batchNo: id, // check batchNo if exist
     });
     let student = null;
     let stdIds = null;

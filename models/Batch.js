@@ -7,8 +7,14 @@ const batchSchema = new Schema({
     required: true,
     unique: true,
   },
-  course: { type: Schema.Types.ObjectId, ref: "Course" },
-  student: [{ type: Schema.Types.ObjectId, ref: "Student" }],
+  course: { 
+    id: String, 
+    name: String, 
+    courseType: String
+  },
+  student: [
+    { type: String }
+  ],
   startDate: Date,
   endDate: Date,
   classDays: String,

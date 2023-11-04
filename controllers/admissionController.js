@@ -14,8 +14,10 @@ const allAdmission = async (req, res) => {
       $or: [
         { studentId: search },
         { fullName: { $regex: search, $options: "i" } },
+        { 'course.name': { $regex: search, $options: "i" } },
         { paymentType: search },
-        { status: search },
+        { user: search },
+        { batchNo: search },
       ],
     };
     search = search ? searchQuery : {};
@@ -25,9 +27,6 @@ const allAdmission = async (req, res) => {
         path: "student",
         select: "studentId avatar fullName address phone status",
       })
-      .populate({ path: "course", select: "name courseType courseFee" })
-      .populate({ path: "batch", select: "batchNo startDate endDate" })
-      .populate({ path: "user", select: "fullname" })
       .select({
         __v: 0,
       })
@@ -49,9 +48,6 @@ const admissionById = async (req, res) => {
         path: "student",
         select: "studentId avatar fullName address phone status",
       })
-      .populate({ path: "course", select: "name courseType courseFee" })
-      .populate({ path: "batch", select: "batchNo startDate endDate" })
-      .populate({ path: "user", select: "fullname" })
       .select({ __v: 0 });
     res.status(200).json(admission);
   } catch (error) {
@@ -93,7 +89,7 @@ const newAdmission = async (req, res) => {
       await Batch.findByIdAndUpdate(
         { _id: batchId },
         {
-          $addToSet: { student: student._id },
+          $addToSet: { student: student.studentId },
         }
       );
     }
@@ -112,11 +108,16 @@ const newAdmission = async (req, res) => {
     const newAdmission = new Admission({
       ...req.body,
       student: student._id,
-      batch: batchId,
+      course:{
+        id: course._id,
+        name: course.name,
+        courseType: course.courseType
+      },
+      batchNo,
       payableAmount,
       due,
       nextPay: nextPayment,
-      user: req.user.userid,
+      user: req.user.name,
     });
 
     // new admission
@@ -153,7 +154,7 @@ const payment = async (req, res) => {
 
   const admission = await Admission.findOne({
     student: student._id,
-    batch: batch._id,
+    batch: batch.batchNo,
   })
     .sort({ createdAt: -1 })
     .limit(1);
@@ -171,11 +172,11 @@ const payment = async (req, res) => {
   const admissionPayment = new Admission({
     ...req.body,
     student: student._id,
-    batch: batch._id,
+    batch: batch.batchNo,
     payableAmount,
     due,
     nextPay,
-    user: req.user.userid,
+    user: req.user.name,
   });
   // add New admission by paymentType is payment
   const paymentData = await admissionPayment.save();
@@ -190,7 +191,7 @@ const payment = async (req, res) => {
 
   res.status(200).json({
     message: "Payment Success!",
-    paymentData,
+    admission: paymentData,
   });
 };
 
@@ -257,8 +258,12 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
 
     const newBatch = new Batch({
       batchNo,
-      course: course._id,
-      student: [student._id],
+      course: {
+        id: course._id,
+        name: course.name,
+        courseType: course.courseType
+      },
+      student: [student.studentId],
       startDate,
       endDate,
       classDays,
