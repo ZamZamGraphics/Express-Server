@@ -38,8 +38,7 @@ const allBatches = async (req, res) => {
 const batchById = async (req, res) => {
   try {
     let id = req.params.id;
-    const batch = await Batch.findById(id)
-      .select({ __v: 0 });
+    const batch = await Batch.findById(id).select({ __v: 0 });
     res.status(200).json(batch);
   } catch (error) {
     serverError(res, error);
@@ -69,7 +68,7 @@ const newBatch = async (req, res) => {
       course: {
         id: course._id,
         name: course.name,
-        courseType: course.courseType
+        courseType: course.courseType,
       },
       student: stdIds,
       endDate,
@@ -90,7 +89,7 @@ const updateBatch = async (req, res) => {
     let { id } = req.params;
     const { startDate, classDays, classTime } = req.body;
     const batch = await Batch.findById(id);
-    const course = await Course.findById({ _id: batch.course });
+    const course = await Course.findById(batch.course.id);
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date(req.body.startDate);
     const endDate = new Date(date.setDate(date.getDate() + duration));
@@ -113,7 +112,7 @@ const updateBatch = async (req, res) => {
 const deleteBatch = async (req, res) => {
   try {
     let id = req.params.id;
-    const batch = await Batch.findById(id)
+    const batch = await Batch.findById(id);
     const admission = await Admission.find({
       batchNo: batch.batchNo,
     });
