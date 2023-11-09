@@ -173,10 +173,13 @@ const deleteStudent = async (req, res) => {
   try {
     let id = req.params.id;
 
-    const student = await Student.findById(id);
+    const student = await Student.findById(id).populate({
+      path: "admission",
+      select: "batchNo course",
+    });
 
     // remove uploaded files
-    if (student.avatar) {
+    if (student?.avatar) {
       unlink(
         path.join(__dirname, `/../public/upload/${student.avatar}`),
         (err) => {
@@ -185,17 +188,26 @@ const deleteStudent = async (req, res) => {
       );
     }
 
+    // remove student ID from Batch
+    if (student?.admission.length > 0) {
+      student.admission.forEach(async (admission) => {
+        const batch = await Batch.find({ batchNo: admission.batchNo });
+        if (batch.length > 0) {
+          const mapedBatch = batch.map((item) => item.student);
+          const updatedStdId = mapedBatch[0].filter(
+            (stdId) => stdId !== student.studentId
+          );
+          // update student Ids in Batch
+          await Batch.findByIdAndUpdate(
+            { _id: batch[0]._id },
+            { $set: { student: updatedStdId } }
+          );
+        }
+      });
+    }
+
     // delete all admission in this student ID
     await Admission.deleteMany({ student: id });
-
-    // remove student ID from Batch
-    const batch = Batch.find({ student: { $in: [id] } });
-    if (batch.length > 0) {
-      await Batch.findByIdAndUpdate(
-        { _id: batch._id },
-        { $pull: { student: id } }
-      );
-    }
 
     // finally delete student
     await Student.findByIdAndDelete(id);

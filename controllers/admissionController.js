@@ -14,7 +14,7 @@ const allAdmission = async (req, res) => {
       $or: [
         { studentId: search },
         { fullName: { $regex: search, $options: "i" } },
-        { 'course.name': { $regex: search, $options: "i" } },
+        { "course.name": { $regex: search, $options: "i" } },
         { paymentType: search },
         { user: search },
         { batchNo: search },
@@ -108,10 +108,10 @@ const newAdmission = async (req, res) => {
     const newAdmission = new Admission({
       ...req.body,
       student: student._id,
-      course:{
+      course: {
         id: course._id,
         name: course.name,
-        courseType: course.courseType
+        courseType: course.courseType,
       },
       batchNo,
       payableAmount,
@@ -204,7 +204,7 @@ const deleteAdmission = async (req, res) => {
       .limit(1);
     const admission = await Admission.findById(id);
     const student = await Student.findById({ _id: admission.student._id });
-    const batch = await Batch.findById({ _id: admission.batch._id });
+    const batch = await Batch.findOne({ batchNo: admission.batchNo });
 
     if (JSON.stringify(lastAdmited._id) !== JSON.stringify(admission._id)) {
       return resourceError(res, {
@@ -228,7 +228,7 @@ const deleteAdmission = async (req, res) => {
       // remove student ID from Batch
       await Batch.findByIdAndUpdate(
         { _id: batch._id },
-        { $pull: { student: student._id } }
+        { $pull: { student: student.studentId } }
       );
     } else if (admission.paymentType == "Payment") {
       await Student.findByIdAndUpdate(
@@ -261,7 +261,7 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
       course: {
         id: course._id,
         name: course.name,
-        courseType: course.courseType
+        courseType: course.courseType,
       },
       student: [student.studentId],
       startDate,
