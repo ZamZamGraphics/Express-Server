@@ -3,7 +3,6 @@ const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
-const ObjectId = require("mongoose").ObjectId;
 
 const allAdmission = async (req, res) => {
   try {
