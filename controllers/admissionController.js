@@ -3,6 +3,7 @@ const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
+const ObjectId = require("mongoose").ObjectId;
 
 const allAdmission = async (req, res) => {
   try {
@@ -199,18 +200,25 @@ const deleteAdmission = async (req, res) => {
   try {
     let id = req.params.id;
     // find Last Admited
-    const lastAdmited = await Admission.findOne()
+    const admission = await Admission.findById(id);
+    const lastAdmited = await Admission.findOne({
+      student: admission.student,
+    })
       .sort({ createdAt: -1 })
       .limit(1);
-    const admission = await Admission.findById(id);
-    const student = await Student.findById({ _id: admission.student._id });
-    const batch = await Batch.findOne({ batchNo: admission.batchNo });
+    const student = await Student.findById({ _id: lastAdmited.student._id });
+    const batch = await Batch.findOne({ batchNo: lastAdmited.batchNo });
 
     if (JSON.stringify(lastAdmited._id) !== JSON.stringify(admission._id)) {
       return resourceError(res, {
         message: "This admission cannot be deleted!",
       });
     }
+
+    const filteredAdmisstion = student.admission.filter(
+      (admissionId) =>
+        JSON.stringify(admissionId) !== JSON.stringify(admission._id)
+    );
 
     // update student due
     if (admission.paymentType == "New") {
@@ -219,8 +227,8 @@ const deleteAdmission = async (req, res) => {
         {
           $pull: { admission: admission._id },
           $set: {
-            status: "Pending",
-            totalDues: admission.due - student.totalDues,
+            status: filteredAdmisstion.length > 0 ? student.status : "Pending",
+            totalDues: student.totalDues - admission.due,
           },
         }
       );
@@ -234,7 +242,7 @@ const deleteAdmission = async (req, res) => {
       await Student.findByIdAndUpdate(
         { _id: student._id },
         {
-          $set: { totalDues: admission.payment + student.totalDues },
+          $set: { totalDues: student.totalDues + admission.payment },
         }
       );
     }
@@ -242,7 +250,7 @@ const deleteAdmission = async (req, res) => {
     // finally delete admission
     await Admission.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Admission was deleted!" });
+    res.status(200).json({ message: "Admission was deleted!", stdAdmission });
   } catch (error) {
     serverError(res, error);
   }
