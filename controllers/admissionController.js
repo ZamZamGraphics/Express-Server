@@ -48,6 +48,10 @@ const admissionById = async (req, res) => {
         path: "student",
         select: "studentId avatar fullName address phone status",
       })
+      .populate({
+        path: "user",
+        select: "fullname",
+      })
       .select({ __v: 0 });
     res.status(200).json(admission);
   } catch (error) {
@@ -226,7 +230,7 @@ const deleteAdmission = async (req, res) => {
         {
           $pull: { admission: admission._id },
           $set: {
-            status: filteredAdmisstion.length > 0 ? student.status : "Pending",
+            status: filteredAdmisstion.length > 0 ? student.status : "Canceled",
             totalDues: student.totalDues - admission.due,
           },
         }

@@ -58,7 +58,7 @@ const studentSchema = new Schema({
   reference: String,
   status: {
     type: String,
-    enum: ["Approved", "Pending", "Rejected"],
+    enum: ["Approved", "Pending", "Canceled"],
     default: "Pending",
   },
   admission: [

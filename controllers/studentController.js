@@ -61,6 +61,10 @@ const studentById = async (req, res) => {
         path: "admission",
         select: "batchNo course",
       })
+      .populate({
+        path: "user",
+        select: "fullname",
+      })
       .select({
         __v: 0,
       });
@@ -77,6 +81,10 @@ const studentByStudentId = async (req, res) => {
       .populate({
         path: "admission",
         select: "batchNo course",
+      })
+      .populate({
+        path: "user",
+        select: "fullname",
       })
       .select({
         __v: 0,
