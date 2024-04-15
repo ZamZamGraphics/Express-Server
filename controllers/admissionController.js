@@ -117,7 +117,7 @@ const newAdmission = async (req, res) => {
       payableAmount,
       due,
       nextPay: nextPayment,
-      user: req.user.name,
+      user: req.user.userid,
     });
 
     // new admission
@@ -176,7 +176,7 @@ const payment = async (req, res) => {
     payableAmount,
     due,
     nextPay,
-    user: req.user.name,
+    user: req.user.userid,
   });
   // add New admission by paymentType is payment
   const paymentData = await admissionPayment.save();

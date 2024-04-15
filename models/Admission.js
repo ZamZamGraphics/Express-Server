@@ -4,10 +4,10 @@ const Schema = mongoose.Schema;
 const admissionSchema = new Schema(
   {
     student: { type: Schema.Types.ObjectId, ref: "Student" },
-    course: { 
-      id: String, 
-      name: String, 
-      courseType: String
+    course: {
+      id: String,
+      name: String,
+      courseType: String,
     },
     batchNo: String,
     discount: Number,
@@ -20,7 +20,7 @@ const admissionSchema = new Schema(
       type: String,
       enum: ["New", "Payment"],
     },
-    user: String
+    user: { type: Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

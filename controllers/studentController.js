@@ -103,7 +103,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
-        user: req.user.name,
+        user: req.user.userid,
         avatar: req.files[0].filename,
       });
     } else {
@@ -111,7 +111,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
-        user: req.user.name,
+        user: req.user.userid,
         avatar: null,
       });
     }

@@ -67,7 +67,7 @@ const studentSchema = new Schema({
       ref: "Admission",
     },
   ],
-  user: String,
+  user: { type: Schema.Types.ObjectId, ref: "User" },
   totalDues: { type: Number, default: 0 },
   registeredAt: { type: Date, default: Date.now },
 });
