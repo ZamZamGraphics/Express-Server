@@ -30,7 +30,6 @@ const allStudents = async (req, res) => {
         { education: { $regex: search, $options: "i" } },
         { reference: { $regex: search, $options: "i" } },
         { status: search },
-        { user: search },
       ],
     };
     search = search ? searchQuery : {};

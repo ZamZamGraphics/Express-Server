@@ -16,7 +16,6 @@ const allAdmission = async (req, res) => {
         { fullName: { $regex: search, $options: "i" } },
         { "course.name": { $regex: search, $options: "i" } },
         { paymentType: search },
-        { user: search },
         { batchNo: search },
       ],
     };
@@ -263,8 +262,9 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
   try {
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date();
-    const startDate = new Date(date.setDate(date.getDate() + 20));
-    const endDate = new Date(startDate.setDate(startDate.getDate() + duration));
+    const startDate = new Date(date.setDate(date.getDate() + 10));
+    const endDate = new Date(date.setDate(date.getDate() + duration + 10));
+
     const classDays = "Sat, Mon, Wed";
 
     const newBatch = new Batch({
