@@ -33,7 +33,7 @@ const allStudents = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Student.count(search);
+
     const students = await Student.find(search)
       .populate({
         path: "admission",
@@ -45,8 +45,8 @@ const allStudents = async (req, res) => {
       // students?page=1&limit=10&search=value
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
-      .sort({ registeredAt: -1 }); // Last User is First
-    res.status(200).json({ students, total });
+      .sort({ registeredAt: -1 }); // Last is First
+    res.status(200).json(students);
   } catch (error) {
     serverError(res, error);
   }

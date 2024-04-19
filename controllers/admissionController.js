@@ -20,7 +20,7 @@ const allAdmission = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Admission.count(search);
+
     const admission = await Admission.find(search)
       .populate({
         path: "student",
@@ -32,8 +32,8 @@ const allAdmission = async (req, res) => {
       // students?page=1&limit=10&search=value
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
-      .sort({ createdAt: -1 }); // Last User is First
-    res.status(200).json({ admission, total });
+      .sort({ admitedAt: -1 }); // Last is First
+    res.status(200).json(admission);
   } catch (error) {
     serverError(res, error);
   }
@@ -56,6 +56,31 @@ const admissionById = async (req, res) => {
   } catch (error) {
     serverError(res, error);
   }
+};
+
+const fineByStdId = async (req, res) => {
+  const { studentId, batchNo } = req.params;
+  const student = await Student.findOne({ studentId });
+  let admission = null;
+  if (student) {
+    admission = await Admission.findOne({
+      student: student._id,
+      batchNo,
+    })
+      .populate({
+        path: "student",
+        select: "studentId avatar fullName address phone status",
+      })
+      .sort({ admitedAt: -1 })
+      .limit(1);
+    if (!admission) {
+      return resourceError(res, {
+        message: "Student ID & Batch No did not matched!",
+      });
+    }
+  }
+
+  res.status(200).json({ admission });
 };
 
 const newAdmission = async (req, res) => {
@@ -115,6 +140,7 @@ const newAdmission = async (req, res) => {
         id: course._id,
         name: course.name,
         courseType: course.courseType,
+        courseFee: course.courseFee,
       },
       batchNo,
       payableAmount,
@@ -144,8 +170,16 @@ const newAdmission = async (req, res) => {
 };
 
 const payment = async (req, res) => {
-  const student = await Student.findOne({ studentId: req.body.student });
-  const batch = await Batch.findOne({ batchNo: req.body.batch });
+  const {
+    batch: batchNo,
+    student: studentId,
+    discount,
+    payment,
+    nextPay,
+  } = req.body;
+
+  const student = await Student.findOne({ studentId });
+  const batch = await Batch.findOne({ batchNo });
 
   if (!student) {
     return resourceError(res, { message: "The Student ID is Wrong!" });
@@ -157,38 +191,51 @@ const payment = async (req, res) => {
 
   const admission = await Admission.findOne({
     student: student._id,
-    batch: batch.batchNo,
+    batchNo: batch.batchNo,
   })
-    .sort({ createdAt: -1 })
+    .sort({ admitedAt: -1 })
     .limit(1);
 
   if (!admission) {
-    return resourceError(res, { message: "Batch No did not matched!" });
+    return resourceError(res, {
+      message: "Student ID & Batch No did not matched!",
+    });
   }
 
-  const payableAmount = admission.due - (req.body.discount || 0);
-  const due = payableAmount - req.body.payment;
+  const payableAmount = admission.due - (discount || 0);
+  const due = payableAmount - payment;
   const date = new Date();
   const nextDate = new Date(date.setDate(date.getDate() + 15));
-  const nextPay = due > 0 ? nextDate : null;
+
+  let nextPayment = nextPay;
+  if (!nextPay && due > 0) {
+    nextPayment = nextDate;
+  }
 
   const admissionPayment = new Admission({
-    ...req.body,
+    batchNo,
     student: student._id,
-    batch: batch.batchNo,
+    course: admission.course,
+    discount,
     payableAmount,
+    payment,
     due,
-    nextPay,
+    nextPay: nextPayment,
+    paymentType: "Payment",
+    timeSchedule: admission.timeSchedule,
     user: req.user.userid,
   });
+
   // add New admission by paymentType is payment
   const paymentData = await admissionPayment.save();
+
+  let totalDues = parseInt(payment) + parseInt(discount || 0);
 
   // student due update
   await Student.findByIdAndUpdate(
     { _id: student._id },
     {
-      $set: { totalDues: student.totalDues - req.body.payment },
+      $set: { totalDues: student.totalDues - totalDues },
     }
   );
 
@@ -206,7 +253,7 @@ const deleteAdmission = async (req, res) => {
     const lastAdmited = await Admission.findOne({
       student: admission.student,
     })
-      .sort({ createdAt: -1 })
+      .sort({ admitedAt: -1 })
       .limit(1);
     const student = await Student.findById({ _id: lastAdmited.student._id });
     const batch = await Batch.findOne({ batchNo: lastAdmited.batchNo });
@@ -241,10 +288,11 @@ const deleteAdmission = async (req, res) => {
         { $pull: { student: student.studentId } }
       );
     } else if (admission.paymentType == "Payment") {
+      const payment = admission.payment + (admission.discount || 0);
       await Student.findByIdAndUpdate(
         { _id: student._id },
         {
-          $set: { totalDues: student.totalDues + admission.payment },
+          $set: { totalDues: student.totalDues + payment },
         }
       );
     }
@@ -290,6 +338,7 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
 module.exports = {
   allAdmission,
   admissionById,
+  fineByStdId,
   newAdmission,
   payment,
   deleteAdmission,

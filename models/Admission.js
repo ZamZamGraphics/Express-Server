@@ -7,6 +7,7 @@ const admissionSchema = new Schema({
     id: String,
     name: String,
     courseType: String,
+    courseFee: String,
   },
   batchNo: String,
   discount: Number,

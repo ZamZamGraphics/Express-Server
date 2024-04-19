@@ -20,7 +20,7 @@ const allBatches = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Batch.count(search);
+
     const batches = await Batch.find(search)
       .select({
         __v: 0,
@@ -28,8 +28,8 @@ const allBatches = async (req, res) => {
       // batchess?page=1&limit=10&search=value
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
-      .sort({ startDate: -1 }); // Last User is First
-    res.status(200).json({ batches, total });
+      .sort({ startDate: -1 }); // Last is First
+    res.status(200).json(batches);
   } catch (error) {
     serverError(res, error);
   }
