@@ -30,22 +30,40 @@ const allStudents = async (req, res) => {
         { education: { $regex: search, $options: "i" } },
         { reference: { $regex: search, $options: "i" } },
         { status: search },
+        { "admissionDetails.batchNo": search },
+        { "admissionDetails.course.name": { $regex: search, $options: "i" } },
       ],
     };
     search = search ? searchQuery : {};
 
-    const students = await Student.find(search)
-      .populate({
-        path: "admission",
-        select: "batchNo course",
-      })
-      .select({
-        __v: 0,
-      })
-      // students?page=1&limit=10&search=value
-      .skip(limit * page) // Page Number * Show Par Page
-      .limit(limit) // Show Par Page
-      .sort({ registeredAt: -1 }); // Last is First
+    const students = await Student.aggregate([
+      {
+        $lookup: {
+          from: "admissions",
+          localField: "admission",
+          foreignField: "_id",
+          as: "admissionDetails"
+        }
+      },
+      // {
+      //   $unwind: "$admission"
+      // },
+      {$match:search},
+      { $sort: { registeredAt: -1 } },
+      { $skip: limit * page },
+      { $limit: parseInt(limit) }
+    ])
+      // .populate({
+      //   path: "admission",
+      //   select: "batchNo course",
+      // })
+      // .select({
+      //   __v: 0,
+      // })
+      // // students?page=1&limit=10&search=value
+      // .skip(limit * page) // Page Number * Show Par Page
+      // .limit(limit) // Show Par Page
+      // .sort({ registeredAt: -1 }); // Last is First
     res.status(200).json(students);
   } catch (error) {
     serverError(res, error);

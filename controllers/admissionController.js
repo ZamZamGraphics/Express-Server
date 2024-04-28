@@ -12,8 +12,8 @@ const allAdmission = async (req, res) => {
 
     const searchQuery = {
       $or: [
-        { studentId: search },
-        { fullName: { $regex: search, $options: "i" } },
+        { "student.studentId": search },
+        { "student.fullName": { $regex: search, $options: "i" } },
         { "course.name": { $regex: search, $options: "i" } },
         { paymentType: search },
         { batchNo: search },
@@ -21,18 +21,23 @@ const allAdmission = async (req, res) => {
     };
     search = search ? searchQuery : {};
 
-    const admission = await Admission.find(search)
-      .populate({
-        path: "student",
-        select: "studentId avatar fullName address phone status",
-      })
-      .select({
-        __v: 0,
-      })
-      // students?page=1&limit=10&search=value
-      .skip(limit * page) // Page Number * Show Par Page
-      .limit(limit) // Show Par Page
-      .sort({ admitedAt: -1 }); // Last is First
+    const admission = await Admission.aggregate([
+      {
+        $lookup: {
+          from: "students",
+          localField: "student",
+          foreignField: "_id",
+          as: "student"
+        }
+      },
+      {
+        $unwind: "$student"
+      },
+      {$match:search},
+      { $sort: { admitedAt: -1 } },
+      { $skip: limit * page },
+      { $limit: parseInt(limit) }
+    ])
     res.status(200).json(admission);
   } catch (error) {
     serverError(res, error);
