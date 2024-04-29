@@ -28,7 +28,7 @@ const verification = async (req, res, next) => {
 
       // send email to Verification successful
       const data = await ejs.renderFile(
-        __dirname + "../../views/accountVerified.ejs",
+        path.join(__dirname, `/../views/accountVerified.ejs`),
         {
           sitename: process.env.SITE_NAME,
           fullname: user.fullname,
@@ -78,7 +78,7 @@ const resendVerification = async (req, res, next) => {
       const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
 
       const data = await ejs.renderFile(
-        __dirname + "../../views/resendVerification.ejs",
+        path.join(__dirname, `/../views/resendVerification.ejs`),
         {
           sitename: process.env.SITE_NAME,
           fullname: user.fullname,
@@ -124,7 +124,7 @@ const forgotPassowrd = async (req, res, next) => {
       const generateURL = `${process.env.APP_URL}/reset?token=${token}&id=${user._id}`;
 
       const data = await ejs.renderFile(
-        __dirname + "../../views/resetPassword.ejs",
+        path.join(__dirname, `/../views/resetPassword.ejs`),
         {
           sitename: process.env.SITE_NAME,
           fullname: user.fullname,
@@ -185,7 +185,7 @@ const resetPassword = async (req, res, next) => {
 
         // send email to user.email
         const data = await ejs.renderFile(
-          __dirname + "../../views/passwordChanged.ejs",
+          path.join(__dirname, `/../views/passwordChanged.ejs`),
           {
             sitename: process.env.SITE_NAME,
             fullname: user.fullname,

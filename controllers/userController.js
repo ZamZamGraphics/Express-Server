@@ -81,7 +81,7 @@ const register = async (req, res) => {
     const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
 
     const data = await ejs.renderFile(
-      __dirname + "../../views/resendVerification.ejs",
+      path.join(__dirname, `/../views/resendVerification.ejs`),
       {
         sitename: process.env.SITE_NAME,
         fullname: user.fullname,
@@ -160,7 +160,7 @@ const updateUser = async (req, res) => {
       const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
 
       const data = await ejs.renderFile(
-        __dirname + "../../views/resendVerification.ejs",
+        path.join(__dirname, `/../views/resendVerification.ejs`),
         {
           sitename: process.env.SITE_NAME,
           fullname: user.fullname,
