@@ -12,6 +12,15 @@ const allStudents = async (req, res) => {
     const page = req.query.page || 0;
     let search = req.query.search || null;
 
+    const from = req.query.from || "24-08-2022";
+    let to ;
+    if(req.query.to){
+      to = new Date(req.query.to);
+      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+    } else {
+      to = new Date(Date.now() + ( 3600 * 1000 * 24));
+    }
+
     const searchQuery = {
       $or: [
         { studentId: search },
@@ -45,25 +54,17 @@ const allStudents = async (req, res) => {
           as: "admissionDetails"
         }
       },
-      // {
-      //   $unwind: "$admission"
-      // },
       {$match:search},
+      {$match: {
+        $and: [
+          { registeredAt: { $gte: new Date(from) } },
+          { registeredAt: { $lte: new Date(to) } }
+        ]
+      }},
       { $sort: { registeredAt: -1 } },
       { $skip: limit * page },
       { $limit: parseInt(limit) }
     ])
-      // .populate({
-      //   path: "admission",
-      //   select: "batchNo course",
-      // })
-      // .select({
-      //   __v: 0,
-      // })
-      // // students?page=1&limit=10&search=value
-      // .skip(limit * page) // Page Number * Show Par Page
-      // .limit(limit) // Show Par Page
-      // .sort({ registeredAt: -1 }); // Last is First
     res.status(200).json(students);
   } catch (error) {
     serverError(res, error);

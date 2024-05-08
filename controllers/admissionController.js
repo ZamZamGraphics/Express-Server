@@ -10,6 +10,15 @@ const allAdmission = async (req, res) => {
     const page = req.query.page || 0;
     let search = req.query.search || null;
 
+    const from = req.query.from || "24-08-2022";
+    let to ;
+    if(req.query.to){
+      to = new Date(req.query.to);
+      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+    } else {
+      to = new Date(Date.now() + ( 3600 * 1000 * 24));
+    }
+
     const searchQuery = {
       $or: [
         { "student.studentId": search },
@@ -34,6 +43,12 @@ const allAdmission = async (req, res) => {
         $unwind: "$student"
       },
       {$match:search},
+      {$match: {
+        $and: [
+          { admitedAt: { $gte: new Date(from) } },
+          { admitedAt: { $lte: new Date(to) } }
+        ]
+      }},
       { $sort: { admitedAt: -1 } },
       { $skip: limit * page },
       { $limit: parseInt(limit) }

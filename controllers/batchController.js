@@ -13,6 +13,9 @@ const allBatches = async (req, res) => {
     const searchQuery = {
       $or: [
         { batchNo: search },
+        { student: search },
+        { "course.name": { $regex: search, $options: "i" } },
+        { "course.courseType": { $regex: search, $options: "i" } },
         // { startDate: { $lt:  new Date(search) } },
         // { endDate: { $lt: new Date(search) } },
         { classDays: { $regex: search, $options: "i" } },
