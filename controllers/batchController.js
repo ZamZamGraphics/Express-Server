@@ -8,7 +8,22 @@ const allBatches = async (req, res) => {
   try {
     const limit = req.query.limit || 0;
     const page = req.query.page || 0;
-    let search = req.query.search || null;
+    
+    let from = req.query.from || "24-08-2022";
+    let to ;
+    if(req.query.to){
+      to = new Date(req.query.to);
+      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+    } else {
+      to = new Date(Date.now() + ( 3600 * 1000 * 24));
+    }
+    
+    let search;
+    if(req.query.to){
+      search = { startDate: { $gte: new Date(from), $lte: new Date(to) } }
+    } else {
+      search = req.query.search;
+    }
 
     const searchQuery = {
       $or: [
@@ -16,14 +31,17 @@ const allBatches = async (req, res) => {
         { student: search },
         { "course.name": { $regex: search, $options: "i" } },
         { "course.courseType": { $regex: search, $options: "i" } },
-        // { startDate: { $lt:  new Date(search) } },
-        // { endDate: { $lt: new Date(search) } },
+        // { startDate: { $gte:  new Date(search) } },
+        // { endDate: { $lte: new Date(search) } },
         { classDays: { $regex: search, $options: "i" } },
         { classTime: { $regex: search, $options: "i" } },
       ],
     };
-    search = search ? searchQuery : {};
 
+    if(!req.query.to) {
+      search = search ? searchQuery : {};
+    }
+    
     const batches = await Batch.find(search)
       .select({
         __v: 0,
