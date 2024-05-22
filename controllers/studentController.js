@@ -12,7 +12,7 @@ const allStudents = async (req, res) => {
     const page = req.query.page || 0;
     let search = req.query.search || null;
 
-    const from = req.query.from || "24-08-2022";
+    const from = req.query.from || "2022-08-24";
     let to ;
     if(req.query.to){
       to = new Date(req.query.to);
