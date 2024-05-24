@@ -3,6 +3,7 @@ const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
+const sendSMS = require("../utilities/sendMessages");
 
 const allAdmission = async (req, res) => {
   try {
@@ -171,6 +172,13 @@ const newAdmission = async (req, res) => {
 
     // new admission
     const admission = await newAdmission.save();
+
+    // Send SMS for multiple number separate by comma exemple : '8801816426093,8801716426093'
+    sendSMS({
+      numbers: `88${student.phone[0]}`,
+      messages: `প্রিয় শিক্ষার্থী, ${course.name} কোর্সে আপনার ভর্তি সম্পন্ন হয়েছে। আইডি নং ${studentId} ব্যাচ নং-${batchNo} শীঘ্রই আপনার ক্লাসের সময়সূচী অফিস থেকে নিশ্চিত করা হবে। ধন্যবাদ। আল-মদিনা আইটি 01736722622`
+    })
+
     // student due update
     await Student.findByIdAndUpdate(
       { _id: student._id },
