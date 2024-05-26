@@ -45,8 +45,7 @@ const batchValidators = [
     .withMessage("Start Date is required")
     .isISO8601()
     .toDate()
-    .withMessage("Select date in YYYY-MM-DD format")
-    .trim(),
+    .withMessage("Select date in DD-MM-YYYY format"),
   check("classDays")
     .isLength({ min: 1 })
     .withMessage("Class Days is required")

@@ -1,5 +1,5 @@
 const { serverError, resourceError } = require("../utilities/error");
-const sendSMS = require("../utilities/sendMessages");
+const { sendSMS, smsBalance } = require("../utilities/sendMessages");
 
 const sendMessage = async (req, res) => {
   try {
@@ -50,14 +50,22 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    res.status(201).json({
+    res.status(200).json({
       success: true, 
       message: "Your message was sent successfully!"
     });
   } catch (error) {
-    console.log(error);
     serverError(res, error);
   }
 };
 
-module.exports = {sendMessage};
+const balance = async (req, res) => {
+  try{
+    const data = await smsBalance();
+    res.status(200).json(data);
+  } catch (error) {
+    serverError(res, error);
+  }
+}
+
+module.exports = { sendMessage, balance };

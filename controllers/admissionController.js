@@ -3,7 +3,7 @@ const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
-const sendSMS = require("../utilities/sendMessages");
+const { sendSMS } = require("../utilities/sendMessages");
 
 const allAdmission = async (req, res) => {
   try {
