@@ -1,10 +1,41 @@
 const { serverError, resourceError } = require("../utilities/error");
 const { sendSMS, smsBalance } = require("../utilities/sendMessages");
+const Student = require("../models/Student");
+const Batch = require("../models/Batch");
 
 const sendMessage = async (req, res) => {
   try {
-    const { numbers, messages } = req.body;
-    const stdNumbers = numbers.map(num => `88${num}`).toString();
+    const { studentId, batchNo, messages } = req.body;
+    let numbers = null;
+
+    if(!studentId && batchNo || studentId && batchNo) {
+      const batch = await Batch.findOne({batchNo})
+      if(batch) {
+        if(batch.student.length > 0) {
+          const students = await Student.find({ studentId: { $in: batch.student } }).select(
+            "phone"
+          );
+          numbers = students.reduce((prev, curentStd) => {
+            return prev.concat(curentStd.phone);
+          }, []).filter(Boolean);
+        } else {
+          return resourceError(res, { message: "Student not exist in this Batch." });
+        }
+      } else {
+        return resourceError(res, { message: "Batch not found." });
+      }
+    } else if(studentId && !batchNo) {
+      const students = await Student.find({ studentId: { $in: studentId } }).select(
+        "phone"
+      );
+      numbers = students.reduce((prev, curentStd) => {
+        return prev.concat(curentStd.phone);
+      }, []).filter(Boolean);
+    } else {
+      return resourceError(res, { message: "Please Select Student ID or Put Batch No." });
+    }
+    
+    const stdNumbers = numbers && numbers.map(num => `88${num}`).toString();
 
     // Send SMS for multiple number separate by comma exemple : '8801816426093,8801716426093'
     const data = await sendSMS({

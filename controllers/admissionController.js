@@ -328,7 +328,7 @@ const deleteAdmission = async (req, res) => {
     // finally delete admission
     await Admission.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Admission was deleted!", stdAdmission });
+    res.status(200).json({ message: "Admission was deleted!" });
   } catch (error) {
     serverError(res, error);
   }

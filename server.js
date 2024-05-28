@@ -34,7 +34,7 @@ app.use(
   })
 );
 app.disable("x-powered-by");
-// app.use(limiter);
+app.use(limiter);
 app.use(morgan("dev"));
 app.use(cors({ origin: process.env.APP_URL }));
 
