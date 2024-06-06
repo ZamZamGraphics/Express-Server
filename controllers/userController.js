@@ -23,7 +23,7 @@ const allUser = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-
+    const total = await User.count(search);
     const users = await User.find(search)
       .select({
         __v: 0,
@@ -32,7 +32,7 @@ const allUser = async (req, res) => {
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
       .sort({ createdAt: -1 }); // Last  is First
-    res.status(200).json(users);
+    res.status(200).json({users, total});
   } catch (error) {
     serverError(res, error);
   }

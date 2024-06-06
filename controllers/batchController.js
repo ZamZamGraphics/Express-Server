@@ -36,7 +36,7 @@ const allBatches = async (req, res) => {
         ],
       }
     }
-    
+    const total = await Batch.count(searchQuery);
     const batches = await Batch.find(searchQuery)
       .select({
         __v: 0,
@@ -44,7 +44,7 @@ const allBatches = async (req, res) => {
       .skip(limit * page)
       .limit(limit)
       .sort({ startDate: -1 });
-    res.status(200).json(batches);
+    res.status(200).json({batches, total});
   } catch (error) {
     serverError(res, error);
   }

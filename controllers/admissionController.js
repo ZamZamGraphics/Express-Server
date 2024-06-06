@@ -30,7 +30,7 @@ const allAdmission = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-
+    const total = await Admission.count(search);
     const admission = await Admission.aggregate([
       {
         $lookup: {
@@ -54,7 +54,7 @@ const allAdmission = async (req, res) => {
       { $skip: limit * page },
       { $limit: parseInt(limit) }
     ])
-    res.status(200).json(admission);
+    res.status(200).json({admission, total});
   } catch (error) {
     serverError(res, error);
   }

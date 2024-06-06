@@ -44,7 +44,7 @@ const allStudents = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-
+    const total = await Student.count(search);
     const students = await Student.aggregate([
       {
         $lookup: {
@@ -65,7 +65,7 @@ const allStudents = async (req, res) => {
       { $skip: limit * page },
       { $limit: parseInt(limit) }
     ])
-    res.status(200).json(students);
+    res.status(200).json({students, total});
   } catch (error) {
     serverError(res, error);
   }
