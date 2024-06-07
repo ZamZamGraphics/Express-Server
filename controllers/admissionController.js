@@ -30,7 +30,12 @@ const allAdmission = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Admission.count(search);
+    const total = await Admission.find({ 
+      admitedAt: { 
+        $gte: new Date(from), 
+        $lte: new Date(to) 
+      }
+    }).count(search);
     const admission = await Admission.aggregate([
       {
         $lookup: {

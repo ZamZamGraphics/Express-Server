@@ -44,7 +44,12 @@ const allStudents = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Student.count(search);
+    const total = await Student.find({ 
+      registeredAt: { 
+        $gte: new Date(from), 
+        $lte: new Date(to) 
+      }
+    }).count(search);
     const students = await Student.aggregate([
       {
         $lookup: {
