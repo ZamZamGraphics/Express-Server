@@ -44,13 +44,7 @@ const allStudents = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Student.find({ 
-      registeredAt: { 
-        $gte: new Date(from), 
-        $lte: new Date(to) 
-      }
-    }).count(search);
-    const students = await Student.aggregate([
+    const result = await Student.aggregate([
       {
         $lookup: {
           from: "admissions",
@@ -66,11 +60,18 @@ const allStudents = async (req, res) => {
           { registeredAt: { $lte: new Date(to) } }
         ]
       }},
-      { $sort: { registeredAt: -1 } },
-      { $skip: limit * page },
-      { $limit: parseInt(limit) }
+      {
+        $facet: {
+          students: [
+            { $sort: { registeredAt: -1 } },
+            { $skip: limit * page },
+            { $limit: parseInt(limit) }
+          ],
+          total: [{ $count: "totalRecords" }]
+        }
+      },
     ])
-    res.status(200).json({students, total});
+    res.status(200).json(result);
   } catch (error) {
     serverError(res, error);
   }

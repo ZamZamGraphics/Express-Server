@@ -30,13 +30,7 @@ const allAdmission = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Admission.find({ 
-      admitedAt: { 
-        $gte: new Date(from), 
-        $lte: new Date(to) 
-      }
-    }).count(search);
-    const admission = await Admission.aggregate([
+    const result = await Admission.aggregate([
       {
         $lookup: {
           from: "students",
@@ -55,11 +49,18 @@ const allAdmission = async (req, res) => {
           { admitedAt: { $lte: new Date(to) } }
         ]
       }},
-      { $sort: { admitedAt: -1 } },
-      { $skip: limit * page },
-      { $limit: parseInt(limit) }
+      {
+        $facet: {
+          admission: [
+            { $sort: { admitedAt: -1 } },
+            { $skip: limit * page },
+            { $limit: parseInt(limit) }
+          ],
+          total: [{ $count: "totalRecords" }]
+        }
+      },
     ])
-    res.status(200).json({admission, total});
+    res.status(200).json(result);
   } catch (error) {
     serverError(res, error);
   }
