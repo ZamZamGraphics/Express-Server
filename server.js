@@ -13,6 +13,26 @@ const authenticate = require("./middleware/authenticate");
 const app = express();
 dotenv.config();
 
+const envVariable = {
+    apiURL:process.env.API_URL,
+    appURL:process.env.APP_URL,
+    siteName:process.env.SITE_NAME,
+    port:process.env.PORT,
+    mongoURL:process.env.MONGODB_URL,
+    cookieName:process.env.COOKIE_NAME,
+    cookieSecret:process.env.COOKIE_SECRET,
+    jwtSecret:process.env.JWT_SECRET,
+    jwtExpiry:process.env.JWT_EXPIRY,
+    smsURL:process.env.SMSURL,
+    apiKey:process.env.APIKEY,
+    senderId:process.env.SENDERID,
+    emailHost:process.env.EMAIL_HOST,
+    emailPort:process.env.EMAIL_PORT,
+    emailUsername:process.env.EMAIL_USERNAME,
+    emailPassword:process.env.EMAIL_PASSWORD,
+}
+console.log(envVariable);
+
 const PORT = process.env.PORT || 5000;
 const COOKIE_SECRET = process.env.COOKIE_SECRET || null;
 const DB_URL = process.env.MONGODB_URL || null;
@@ -77,7 +97,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`SERVER is RUNNING http://localhost:${PORT}`);
+  console.log(`SERVER is RUNNING ${process.env.API_URL}:${PORT}`);
   mongoose
     .connect(DB_URL)
     .then(() => console.log("Database connection successful!"))
