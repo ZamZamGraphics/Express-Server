@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const siteTitle = require("./siteTitle");
 
 // Replace with your SMTP credentials
 const smtpOptions = {
@@ -14,7 +15,7 @@ const smtpOptions = {
 const sendEmail = (data) => {
   const transporter = nodemailer.createTransport(smtpOptions);
   return transporter.sendMail({
-    from: `${process.env.SITE_NAME} ${process.env.EMAIL_USERNAME}`,
+    from: `AL MADINA IT ${process.env.EMAIL_USERNAME}`,
     ...data,
   });
 };

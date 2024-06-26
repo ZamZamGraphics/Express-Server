@@ -6,6 +6,7 @@ const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
 const path = require("path");
 const { unlink } = require("fs");
+const siteTitle = require("../utilities/siteTitle");
 
 const allUser = async (req, res) => {
   try {
@@ -79,11 +80,11 @@ const register = async (req, res) => {
 
     // send email to verify account
     const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-
+    const siteName = await siteTitle();
     const data = await ejs.renderFile(
       path.join(__dirname, `/../views/resendVerification.ejs`),
       {
-        sitename: process.env.SITE_NAME,
+        sitename: siteName,
         fullname: user.fullname,
         url: generateURL,
       }
@@ -158,11 +159,11 @@ const updateUser = async (req, res) => {
       });
       // send email to Resend Verification code
       const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-
+      const siteName = await siteTitle();
       const data = await ejs.renderFile(
         path.join(__dirname, `/../views/resendVerification.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteName,
           fullname: user.fullname,
           url: generateURL,
         }

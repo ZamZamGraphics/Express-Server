@@ -6,6 +6,7 @@ const { serverError, resourceError } = require("../utilities/error");
 const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
 const path = require("path");
+const siteTitle = require("../utilities/siteTitle");
 
 // verify token
 const verification = async (req, res, next) => {
@@ -14,6 +15,7 @@ const verification = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const email = decoded.email;
 
+    const siteName = await siteTitle();
     const user = await User.findOne({ email });
     if (user) {
       await User.updateOne(
@@ -30,7 +32,7 @@ const verification = async (req, res, next) => {
       const data = await ejs.renderFile(
         path.join(__dirname, `/../views/accountVerified.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteName,
           fullname: user.fullname,
         }
       );
@@ -76,11 +78,12 @@ const resendVerification = async (req, res, next) => {
 
       // send email to Resend Verification code
       const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-
+      
+      const siteName = await siteTitle();
       const data = await ejs.renderFile(
         path.join(__dirname, `/../views/resendVerification.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteName,
           fullname: user.fullname,
           url: generateURL,
         }
@@ -122,11 +125,12 @@ const forgotPassowrd = async (req, res, next) => {
 
       // send reset link with token to user email
       const generateURL = `${process.env.APP_URL}/reset?token=${token}&id=${user._id}`;
-
+      
+      const siteName = await siteTitle();
       const data = await ejs.renderFile(
         path.join(__dirname, `/../views/resetPassword.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteName,
           fullname: user.fullname,
           url: generateURL,
         }
@@ -182,12 +186,13 @@ const resetPassword = async (req, res, next) => {
           { _id: id },
           { $set: { password: hash, token: null } }
         );
-
+        
+        const siteName = await siteTitle();
         // send email to user.email
         const data = await ejs.renderFile(
           path.join(__dirname, `/../views/passwordChanged.ejs`),
           {
-            sitename: process.env.SITE_NAME,
+            sitename: siteName,
             fullname: user.fullname,
           }
         );

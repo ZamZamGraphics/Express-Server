@@ -32,7 +32,7 @@ const updateSettings = async (req, res) => {
       const data = await ejs.renderFile(
         path.join(__dirname, `/../views/adminVerification.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteTitle,
           url: generateURL,
         }
       );

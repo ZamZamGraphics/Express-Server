@@ -13,25 +13,6 @@ const authenticate = require("./middleware/authenticate");
 const app = express();
 dotenv.config();
 
-const envVariable = {
-    apiURL:process.env.API_URL || null,
-    appURL:process.env.APP_URL || null,
-    siteName:process.env.SITE_NAME || null,
-    port:process.env.PORT || null,
-    mongoURL:process.env.MONGODB_URL || null,
-    cookieName:process.env.COOKIE_NAME || null,
-    cookieSecret:process.env.COOKIE_SECRET || null,
-    jwtSecret:process.env.JWT_SECRET || null,
-    jwtExpiry:process.env.JWT_EXPIRY || null,
-    smsURL:process.env.SMSURL || null,
-    apiKey:process.env.APIKEY || null,
-    senderId:process.env.SENDERID || null,
-    emailHost:process.env.EMAIL_HOST || null,
-    emailPort:process.env.EMAIL_PORT || null,
-    emailUsername:process.env.EMAIL_USERNAME || null,
-    emailPassword:process.env.EMAIL_PASSWORD || null,
-}
-// console.log(envVariable);
 
 const PORT = process.env.PORT || 5000;
 const COOKIE_SECRET = process.env.COOKIE_SECRET || null;
@@ -78,7 +59,6 @@ app.use("/v1/settings", authenticate, require("./routers/settingsRoute"));
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Welcome To Our Application",
-    siteName:process.env.SITE_NAME || null,
   });
 });
 
