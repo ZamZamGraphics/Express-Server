@@ -14,24 +14,24 @@ const app = express();
 dotenv.config();
 
 const envVariable = {
-    apiURL:process.env.API_URL,
-    appURL:process.env.APP_URL,
-    siteName:process.env.SITE_NAME,
-    port:process.env.PORT,
-    mongoURL:process.env.MONGODB_URL,
-    cookieName:process.env.COOKIE_NAME,
-    cookieSecret:process.env.COOKIE_SECRET,
-    jwtSecret:process.env.JWT_SECRET,
-    jwtExpiry:process.env.JWT_EXPIRY,
-    smsURL:process.env.SMSURL,
-    apiKey:process.env.APIKEY,
-    senderId:process.env.SENDERID,
-    emailHost:process.env.EMAIL_HOST,
-    emailPort:process.env.EMAIL_PORT,
-    emailUsername:process.env.EMAIL_USERNAME,
-    emailPassword:process.env.EMAIL_PASSWORD,
+    apiURL:process.env.API_URL || null,
+    appURL:process.env.APP_URL || null,
+    siteName:process.env.SITE_NAME || null,
+    port:process.env.PORT || null,
+    mongoURL:process.env.MONGODB_URL || null,
+    cookieName:process.env.COOKIE_NAME || null,
+    cookieSecret:process.env.COOKIE_SECRET || null,
+    jwtSecret:process.env.JWT_SECRET || null,
+    jwtExpiry:process.env.JWT_EXPIRY || null,
+    smsURL:process.env.SMSURL || null,
+    apiKey:process.env.APIKEY || null,
+    senderId:process.env.SENDERID || null,
+    emailHost:process.env.EMAIL_HOST || null,
+    emailPort:process.env.EMAIL_PORT || null,
+    emailUsername:process.env.EMAIL_USERNAME || null,
+    emailPassword:process.env.EMAIL_PASSWORD || null,
 }
-console.log(envVariable);
+// console.log(envVariable);
 
 const PORT = process.env.PORT || 5000;
 const COOKIE_SECRET = process.env.COOKIE_SECRET || null;
@@ -78,6 +78,7 @@ app.use("/v1/settings", authenticate, require("./routers/settingsRoute"));
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Welcome To Our Application",
+    envVariable
   });
 });
 
@@ -97,7 +98,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`SERVER is RUNNING ${process.env.API_URL}:${PORT}`);
+  console.log(`SERVER is RUNNING http://localhost:${PORT}`);
   mongoose
     .connect(DB_URL)
     .then(() => console.log("Database connection successful!"))
