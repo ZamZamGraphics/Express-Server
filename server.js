@@ -78,7 +78,7 @@ app.use("/v1/settings", authenticate, require("./routers/settingsRoute"));
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Welcome To Our Application",
-    envVariable
+    siteName:process.env.SITE_NAME || null,
   });
 });
 
