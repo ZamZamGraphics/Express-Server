@@ -12,12 +12,12 @@ const allAdmission = async (req, res) => {
     let search = req.query.search || null;
 
     const from = req.query.from || "2022-08-24";
-    let to ;
-    if(req.query.to){
+    let to;
+    if (req.query.to) {
       to = new Date(req.query.to);
-      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+      to = new Date(to.getTime() + 3600 * 1000 * 24);
     } else {
-      to = new Date(Date.now() + ( 3600 * 1000 * 24));
+      to = new Date(Date.now() + 3600 * 1000 * 24);
     }
 
     const searchQuery = {
@@ -36,30 +36,32 @@ const allAdmission = async (req, res) => {
           from: "students",
           localField: "student",
           foreignField: "_id",
-          as: "student"
-        }
+          as: "student",
+        },
       },
       {
-        $unwind: "$student"
+        $unwind: "$student",
       },
-      {$match:search},
-      {$match: {
-        $and: [
-          { admitedAt: { $gte: new Date(from) } },
-          { admitedAt: { $lte: new Date(to) } }
-        ]
-      }},
+      { $match: search },
+      {
+        $match: {
+          $and: [
+            { admitedAt: { $gte: new Date(from) } },
+            { admitedAt: { $lte: new Date(to) } },
+          ],
+        },
+      },
       {
         $facet: {
           admission: [
             { $sort: { admitedAt: -1 } },
             { $skip: limit * page },
-            { $limit: parseInt(limit) }
+            { $limit: parseInt(limit) },
           ],
-          total: [{ $count: "totalRecords" }]
-        }
+          total: [{ $count: "totalRecords" }],
+        },
       },
-    ])
+    ]);
     res.status(200).json(result);
   } catch (error) {
     serverError(res, error);
@@ -85,7 +87,7 @@ const admissionById = async (req, res) => {
   }
 };
 
-const fineByStdId = async (req, res) => {
+const findByStdId = async (req, res) => {
   const { studentId, batchNo } = req.params;
   const student = await Student.findOne({ studentId });
   let admission = null;
@@ -182,8 +184,8 @@ const newAdmission = async (req, res) => {
     // Send SMS for multiple number separate by comma exemple : '8801816426093,8801716426093'
     sendSMS({
       numbers: `88${student.phone[0]}`,
-      messages: `প্রিয় শিক্ষার্থী, ${course.name} কোর্সে আপনার ভর্তি সম্পন্ন হয়েছে। আইডি নং ${studentId} ব্যাচ নং-${batchNo} শীঘ্রই আপনার ক্লাসের সময়সূচী অফিস থেকে নিশ্চিত করা হবে। ধন্যবাদ। আল-মদিনা আইটি 01736722622`
-    })
+      messages: `প্রিয় শিক্ষার্থী, ${course.name} কোর্সে আপনার ভর্তি সম্পন্ন হয়েছে। আইডি নং ${studentId} ব্যাচ নং-${batchNo} শীঘ্রই আপনার ক্লাসের সময়সূচী অফিস থেকে নিশ্চিত করা হবে। ধন্যবাদ। আল-মদিনা আইটি 01736722622`,
+    });
 
     // student due update
     await Student.findByIdAndUpdate(
@@ -372,7 +374,7 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
 module.exports = {
   allAdmission,
   admissionById,
-  fineByStdId,
+  findByStdId,
   newAdmission,
   payment,
   deleteAdmission,

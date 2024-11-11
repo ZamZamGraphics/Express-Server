@@ -1,7 +1,7 @@
 const {
   allAdmission,
   admissionById,
-  fineByStdId,
+  findByStdId,
   newAdmission,
   deleteAdmission,
   payment,
@@ -15,7 +15,7 @@ const router = require("express").Router();
 
 router.get("/", allAdmission);
 router.get("/:id", admissionById);
-router.get("/:batchNo/:studentId", fineByStdId);
+router.get("/:batchNo/:studentId", findByStdId);
 
 router.post(
   "/new",
