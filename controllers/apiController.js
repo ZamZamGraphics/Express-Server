@@ -1,7 +1,12 @@
 const Admission = require("../models/Admission");
 const Student = require("../models/Student");
 const Batch = require("../models/Batch");
+const Course = require("../models/Course");
 const { serverError, resourceError } = require("../utilities/error");
+const dayjs = require("dayjs");
+const isBetween = require("dayjs/plugin/isBetween");
+
+dayjs.extend(isBetween);
 
 const findStudent = async (req, res) => {
   try {
@@ -30,6 +35,17 @@ const findStudent = async (req, res) => {
       });
     }
     const batch = await Batch.findOne({ batchNo: batchNo });
+    const course = await Course.findById(batch.course.id);
+
+    const batchStatus = dayjs().isBetween(
+      dayjs(batch.startDate),
+      dayjs(dayjs(batch.endDate))
+    )
+      ? "Running"
+      : dayjs().isBefore(dayjs(batch.startDate))
+      ? "Upcoming"
+      : "Completed";
+
     const finalResult = {
       name: result?.student?.fullName,
       id: result?.student?.studentId,
@@ -38,10 +54,10 @@ const findStudent = async (req, res) => {
       mothersName: result?.student?.mothersName,
       address: result?.student?.address?.present,
       mobile: result?.student?.phone[0],
-      status: "Completed",
+      status: batchStatus,
       batch: batch?.batchNo,
-      courseName: batch?.course?.name,
-      duration: "3 Months",
+      courseName: course?.name,
+      duration: course?.duration,
     };
     res.status(200).json({ student: finalResult });
   } catch (error) {
