@@ -26,8 +26,7 @@ const studentValidators = [
     .withMessage("Birth Date is required")
     .isISO8601()
     .toDate()
-    .withMessage("Enter date of birth in YYYY-MM-DD format")
-    .trim(),
+    .withMessage("Enter date of birth in DD-MM-YYYY format"),
   check("gender")
     .isLength({ min: 1 })
     .withMessage("Gender is required")

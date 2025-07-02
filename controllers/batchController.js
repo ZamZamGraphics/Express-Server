@@ -9,27 +9,42 @@ const allBatches = async (req, res) => {
     const limit = req.query.limit || 0;
     const page = req.query.page || 0;
     let search = req.query.search || null;
+    let from = req.query.from || "2022-08-24";
+    let to = req.query.to || null;
 
-    const searchQuery = {
-      $or: [
-        { batchNo: search },
-        // { startDate: { $lt:  new Date(search) } },
-        // { endDate: { $lt: new Date(search) } },
-        { classDays: { $regex: search, $options: "i" } },
-        { classTime: { $regex: search, $options: "i" } },
-      ],
-    };
-    search = search ? searchQuery : {};
-    const total = await Batch.count(search);
-    const batches = await Batch.find(search)
+    let searchQuery = {};
+    
+    if(from && to){
+      from = new Date(from);
+      to = new Date(to);
+      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+      searchQuery = { startDate: { $gte: from, $lte: to }}
+    } else if(from && !to) {
+      from = new Date(from);
+      searchQuery = { startDate: { $gte: from }}
+    }
+
+    if(search) {
+      searchQuery = {
+        $or: [
+          { batchNo: search },
+          { student: search },
+          { "course.name": { $regex: search, $options: "i" } },
+          { "course.courseType": { $regex: search, $options: "i" } },
+          { classDays: { $regex: search, $options: "i" } },
+          { classTime: { $regex: search, $options: "i" } },
+        ],
+      }
+    }
+    const total = await Batch.count(searchQuery);
+    const batches = await Batch.find(searchQuery)
       .select({
         __v: 0,
       })
-      // batchess?page=1&limit=10&search=value
-      .skip(limit * page) // Page Number * Show Par Page
-      .limit(limit) // Show Par Page
-      .sort({ startDate: -1 }); // Last User is First
-    res.status(200).json({ batches, total });
+      .skip(limit * page)
+      .limit(limit)
+      .sort({ startDate: -1 });
+    res.status(200).json({batches, total});
   } catch (error) {
     serverError(res, error);
   }

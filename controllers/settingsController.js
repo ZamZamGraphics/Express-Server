@@ -30,9 +30,9 @@ const updateSettings = async (req, res) => {
       // send email to Verify
       const generateURL = `${process.env.APP_URL}/adminemailverify?token=${token}`;
       const data = await ejs.renderFile(
-        __dirname + "../../views/adminVerification.ejs",
+        path.join(__dirname, `/../views/adminVerification.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteTitle,
           url: generateURL,
         }
       );

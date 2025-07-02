@@ -6,6 +6,7 @@ const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
 const path = require("path");
 const { unlink } = require("fs");
+const siteTitle = require("../utilities/siteTitle");
 
 const allUser = async (req, res) => {
   try {
@@ -31,9 +32,8 @@ const allUser = async (req, res) => {
       // users?page=1&limit=10&search=value
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
-      .sort({ createdAt: -1 }); // Last User is First
-
-    res.status(200).json({ users, total });
+      .sort({ createdAt: -1 }); // Last  is First
+    res.status(200).json({users, total});
   } catch (error) {
     serverError(res, error);
   }
@@ -80,11 +80,11 @@ const register = async (req, res) => {
 
     // send email to verify account
     const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-
+    const siteName = await siteTitle();
     const data = await ejs.renderFile(
-      __dirname + "../../views/resendVerification.ejs",
+      path.join(__dirname, `/../views/resendVerification.ejs`),
       {
-        sitename: process.env.SITE_NAME,
+        sitename: siteName,
         fullname: user.fullname,
         url: generateURL,
       }
@@ -159,11 +159,11 @@ const updateUser = async (req, res) => {
       });
       // send email to Resend Verification code
       const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-
+      const siteName = await siteTitle();
       const data = await ejs.renderFile(
-        __dirname + "../../views/resendVerification.ejs",
+        path.join(__dirname, `/../views/resendVerification.ejs`),
         {
-          sitename: process.env.SITE_NAME,
+          sitename: siteName,
           fullname: user.fullname,
           url: generateURL,
         }

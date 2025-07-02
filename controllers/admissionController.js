@@ -3,6 +3,7 @@ const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
+const { sendSMS } = require("../utilities/sendMessages");
 
 const allAdmission = async (req, res) => {
   try {
@@ -10,31 +11,58 @@ const allAdmission = async (req, res) => {
     const page = req.query.page || 0;
     let search = req.query.search || null;
 
+    const from = req.query.from || "2022-08-24";
+    let to;
+    if (req.query.to) {
+      to = new Date(req.query.to);
+      to = new Date(to.getTime() + 3600 * 1000 * 24);
+    } else {
+      to = new Date(Date.now() + 3600 * 1000 * 24);
+    }
+
     const searchQuery = {
       $or: [
-        { studentId: search },
-        { fullName: { $regex: search, $options: "i" } },
+        { "student.studentId": search },
+        { "student.fullName": { $regex: search, $options: "i" } },
         { "course.name": { $regex: search, $options: "i" } },
         { paymentType: search },
-        { user: search },
         { batchNo: search },
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Admission.count(search);
-    const admission = await Admission.find(search)
-      .populate({
-        path: "student",
-        select: "studentId avatar fullName address phone status",
-      })
-      .select({
-        __v: 0,
-      })
-      // students?page=1&limit=10&search=value
-      .skip(limit * page) // Page Number * Show Par Page
-      .limit(limit) // Show Par Page
-      .sort({ createdAt: -1 }); // Last User is First
-    res.status(200).json({ admission, total });
+    const result = await Admission.aggregate([
+      {
+        $lookup: {
+          from: "students",
+          localField: "student",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+      {
+        $unwind: "$student",
+      },
+      { $match: search },
+      {
+        $match: {
+          $and: [
+            { admitedAt: { $gte: new Date(from) } },
+            { admitedAt: { $lte: new Date(to) } },
+          ],
+        },
+      },
+      {
+        $facet: {
+          admission: [
+            { $sort: { admitedAt: -1 } },
+            { $skip: limit * page },
+            { $limit: parseInt(limit) },
+          ],
+          total: [{ $count: "totalRecords" }],
+        },
+      },
+    ]);
+    res.status(200).json(result);
   } catch (error) {
     serverError(res, error);
   }
@@ -48,11 +76,40 @@ const admissionById = async (req, res) => {
         path: "student",
         select: "studentId avatar fullName address phone status",
       })
+      .populate({
+        path: "user",
+        select: "fullname",
+      })
       .select({ __v: 0 });
     res.status(200).json(admission);
   } catch (error) {
     serverError(res, error);
   }
+};
+
+const findByStdId = async (req, res) => {
+  const { studentId, batchNo } = req.params;
+  const student = await Student.findOne({ studentId });
+  let admission = null;
+  if (student) {
+    admission = await Admission.findOne({
+      student: student._id,
+      batchNo,
+    })
+      .populate({
+        path: "student",
+        select: "studentId avatar fullName address phone status",
+      })
+      .sort({ admitedAt: -1 })
+      .limit(1);
+    if (!admission) {
+      return resourceError(res, {
+        message: "Student ID & Batch No did not matched!",
+      });
+    }
+  }
+
+  res.status(200).json({ admission });
 };
 
 const newAdmission = async (req, res) => {
@@ -112,16 +169,24 @@ const newAdmission = async (req, res) => {
         id: course._id,
         name: course.name,
         courseType: course.courseType,
+        courseFee: course.courseFee,
       },
       batchNo,
       payableAmount,
       due,
       nextPay: nextPayment,
-      user: req.user.name,
+      user: req.user.userid,
     });
 
     // new admission
     const admission = await newAdmission.save();
+
+    // Send SMS for multiple number separate by comma exemple : '8801816426093,8801716426093'
+    sendSMS({
+      numbers: `88${student.phone[0]}`,
+      messages: `প্রিয় শিক্ষার্থী, ${course.name} কোর্সে আপনার ভর্তি সম্পন্ন হয়েছে। আইডি নং ${studentId} ব্যাচ নং-${batchNo} শীঘ্রই আপনার ক্লাসের সময়সূচী অফিস থেকে নিশ্চিত করা হবে। ধন্যবাদ। আল-মদিনা আইটি 01736722622`,
+    });
+
     // student due update
     await Student.findByIdAndUpdate(
       { _id: student._id },
@@ -141,8 +206,16 @@ const newAdmission = async (req, res) => {
 };
 
 const payment = async (req, res) => {
-  const student = await Student.findOne({ studentId: req.body.student });
-  const batch = await Batch.findOne({ batchNo: req.body.batch });
+  const {
+    batch: batchNo,
+    student: studentId,
+    discount,
+    payment,
+    nextPay,
+  } = req.body;
+
+  const student = await Student.findOne({ studentId });
+  const batch = await Batch.findOne({ batchNo });
 
   if (!student) {
     return resourceError(res, { message: "The Student ID is Wrong!" });
@@ -154,38 +227,51 @@ const payment = async (req, res) => {
 
   const admission = await Admission.findOne({
     student: student._id,
-    batch: batch.batchNo,
+    batchNo: batch.batchNo,
   })
-    .sort({ createdAt: -1 })
+    .sort({ admitedAt: -1 })
     .limit(1);
 
   if (!admission) {
-    return resourceError(res, { message: "Batch No did not matched!" });
+    return resourceError(res, {
+      message: "Student ID & Batch No did not matched!",
+    });
   }
 
-  const payableAmount = admission.due - (req.body.discount || 0);
-  const due = payableAmount - req.body.payment;
+  const payableAmount = admission.due - (discount || 0);
+  const due = payableAmount - payment;
   const date = new Date();
   const nextDate = new Date(date.setDate(date.getDate() + 15));
-  const nextPay = due > 0 ? nextDate : null;
+
+  let nextPayment = nextPay;
+  if (!nextPay && due > 0) {
+    nextPayment = nextDate;
+  }
 
   const admissionPayment = new Admission({
-    ...req.body,
+    batchNo,
     student: student._id,
-    batch: batch.batchNo,
+    course: admission.course,
+    discount,
     payableAmount,
+    payment,
     due,
-    nextPay,
-    user: req.user.name,
+    nextPay: nextPayment,
+    paymentType: "Payment",
+    timeSchedule: admission.timeSchedule,
+    user: req.user.userid,
   });
+
   // add New admission by paymentType is payment
   const paymentData = await admissionPayment.save();
+
+  let totalDues = parseInt(payment) + parseInt(discount || 0);
 
   // student due update
   await Student.findByIdAndUpdate(
     { _id: student._id },
     {
-      $set: { totalDues: student.totalDues - req.body.payment },
+      $set: { totalDues: student.totalDues - totalDues },
     }
   );
 
@@ -203,7 +289,7 @@ const deleteAdmission = async (req, res) => {
     const lastAdmited = await Admission.findOne({
       student: admission.student,
     })
-      .sort({ createdAt: -1 })
+      .sort({ admitedAt: -1 })
       .limit(1);
     const student = await Student.findById({ _id: lastAdmited.student._id });
     const batch = await Batch.findOne({ batchNo: lastAdmited.batchNo });
@@ -226,7 +312,7 @@ const deleteAdmission = async (req, res) => {
         {
           $pull: { admission: admission._id },
           $set: {
-            status: filteredAdmisstion.length > 0 ? student.status : "Pending",
+            status: filteredAdmisstion.length > 0 ? student.status : "Canceled",
             totalDues: student.totalDues - admission.due,
           },
         }
@@ -238,10 +324,11 @@ const deleteAdmission = async (req, res) => {
         { $pull: { student: student.studentId } }
       );
     } else if (admission.paymentType == "Payment") {
+      const payment = admission.payment + (admission.discount || 0);
       await Student.findByIdAndUpdate(
         { _id: student._id },
         {
-          $set: { totalDues: student.totalDues + admission.payment },
+          $set: { totalDues: student.totalDues + payment },
         }
       );
     }
@@ -249,7 +336,7 @@ const deleteAdmission = async (req, res) => {
     // finally delete admission
     await Admission.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Admission was deleted!", stdAdmission });
+    res.status(200).json({ message: "Admission was deleted!" });
   } catch (error) {
     serverError(res, error);
   }
@@ -259,8 +346,9 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
   try {
     const duration = course.duration.split(" ")[0] * 30;
     const date = new Date();
-    const startDate = new Date(date.setDate(date.getDate() + 20));
-    const endDate = new Date(startDate.setDate(startDate.getDate() + duration));
+    const startDate = new Date(date.setDate(date.getDate() + 10));
+    const endDate = new Date(date.setDate(date.getDate() + duration + 10));
+
     const classDays = "Sat, Mon, Wed";
 
     const newBatch = new Batch({
@@ -286,6 +374,7 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
 module.exports = {
   allAdmission,
   admissionById,
+  findByStdId,
   newAdmission,
   payment,
   deleteAdmission,

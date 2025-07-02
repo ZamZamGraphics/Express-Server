@@ -45,8 +45,7 @@ const admissionValidators = [
     .optional({ checkFalsy: true })
     .isISO8601()
     .toDate()
-    .withMessage("Select date in YYYY-MM-DD format")
-    .trim(),
+    .withMessage("Select date in DD-MM-YYYY format"),
   check("paymentType")
     .isLength({ min: 1 })
     .withMessage("Payment Type is required")

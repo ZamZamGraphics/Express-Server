@@ -19,7 +19,7 @@ const DB_URL = process.env.MONGODB_URL || null;
 
 const limiter = rateLimit({
   windowMs: 2 * 60 * 1000, // 2 minutes
-  limit: 100, // Limit each IP to 100 request per windowMs
+  limit: 500, // Limit each IP to 500 request per windowMs
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   handler: function (req, res) {
     return res.status(429).json({
@@ -46,10 +46,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // parse cookies
 app.use(cookieParser(COOKIE_SECRET));
 
+app.use("/v1/api", require("./routers/apiRoute"));
 app.use("/v1/students", authenticate, require("./routers/studentRoute"));
 app.use("/v1/admission", authenticate, require("./routers/admissionRoute"));
 app.use("/v1/courses", authenticate, require("./routers/courseRoute"));
 app.use("/v1/batches", authenticate, require("./routers/batchRoute"));
+app.use("/v1/messages", authenticate, require("./routers/messagesRoute"));
 app.use("/v1/users", require("./routers/userRoute"));
 app.use("/v1/settings", authenticate, require("./routers/settingsRoute"));
 

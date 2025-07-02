@@ -12,6 +12,15 @@ const allStudents = async (req, res) => {
     const page = req.query.page || 0;
     let search = req.query.search || null;
 
+    const from = req.query.from || "2022-08-24";
+    let to ;
+    if(req.query.to){
+      to = new Date(req.query.to);
+      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+    } else {
+      to = new Date(Date.now() + ( 3600 * 1000 * 24));
+    }
+
     const searchQuery = {
       $or: [
         { studentId: search },
@@ -30,24 +39,39 @@ const allStudents = async (req, res) => {
         { education: { $regex: search, $options: "i" } },
         { reference: { $regex: search, $options: "i" } },
         { status: search },
-        { user: search },
+        { "admissionDetails.batchNo": search },
+        { "admissionDetails.course.name": { $regex: search, $options: "i" } },
       ],
     };
     search = search ? searchQuery : {};
-    const total = await Student.count(search);
-    const students = await Student.find(search)
-      .populate({
-        path: "admission",
-        select: "batchNo course",
-      })
-      .select({
-        __v: 0,
-      })
-      // students?page=1&limit=10&search=value
-      .skip(limit * page) // Page Number * Show Par Page
-      .limit(limit) // Show Par Page
-      .sort({ registeredAt: -1 }); // Last User is First
-    res.status(200).json({ students, total });
+    const result = await Student.aggregate([
+      {
+        $lookup: {
+          from: "admissions",
+          localField: "admission",
+          foreignField: "_id",
+          as: "admissionDetails"
+        }
+      },
+      {$match:search},
+      {$match: {
+        $and: [
+          { registeredAt: { $gte: new Date(from) } },
+          { registeredAt: { $lte: new Date(to) } }
+        ]
+      }},
+      {
+        $facet: {
+          students: [
+            { $sort: { registeredAt: -1 } },
+            { $skip: limit * page },
+            { $limit: parseInt(limit) }
+          ],
+          total: [{ $count: "totalRecords" }]
+        }
+      },
+    ])
+    res.status(200).json(result);
   } catch (error) {
     serverError(res, error);
   }
@@ -60,6 +84,10 @@ const studentById = async (req, res) => {
       .populate({
         path: "admission",
         select: "batchNo course",
+      })
+      .populate({
+        path: "user",
+        select: "fullname",
       })
       .select({
         __v: 0,
@@ -77,6 +105,10 @@ const studentByStudentId = async (req, res) => {
       .populate({
         path: "admission",
         select: "batchNo course",
+      })
+      .populate({
+        path: "user",
+        select: "fullname",
       })
       .select({
         __v: 0,
@@ -103,7 +135,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
-        user: req.user.name,
+        user: req.user.userid,
         avatar: req.files[0].filename,
       });
     } else {
@@ -111,7 +143,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
-        user: req.user.name,
+        user: req.user.userid,
         avatar: null,
       });
     }

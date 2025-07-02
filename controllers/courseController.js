@@ -23,8 +23,8 @@ const allCourses = async (req, res) => {
       // coursess?page=1&limit=10&search=value
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
-      .sort({ name: 1 }); // Last User is First
-    res.status(200).json({ courses, total });
+      .sort({ name: 1 }); // Last is First
+    res.status(200).json({courses, total});
   } catch (error) {
     serverError(res, error);
   }

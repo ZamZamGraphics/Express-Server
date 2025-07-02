@@ -10,11 +10,15 @@
 
 # production
 /build
-
+/public/upload
 # misc
 .DS_Store
 .env
 .htaccess
+<<<<<<< HEAD
+=======
+.deploy.json
+>>>>>>> 2026f0e4014ebf17e506dfc8a58b87f7206c102a
 .cpanel.yml
 .env.local
 .env.development.local
@@ -24,3 +28,4 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+passenger.30098.pid.lock
