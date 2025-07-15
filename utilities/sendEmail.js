@@ -1,5 +1,4 @@
 const nodemailer = require("nodemailer");
-const siteTitle = require("./siteTitle");
 
 // Replace with your SMTP credentials
 const smtpOptions = {
@@ -10,6 +9,10 @@ const smtpOptions = {
     user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD,
   },
+  tls: {
+    // do not fail on invalid certs
+    rejectUnauthorized: false,
+  },
 };
 
 const sendEmail = (data) => {
@@ -17,7 +20,24 @@ const sendEmail = (data) => {
   return transporter.sendMail({
     from: `AL MADINA IT ${process.env.EMAIL_USERNAME}`,
     ...data,
-  });
+  },
+    (err, info) => {
+      if (err) {
+        // console.error(err);
+        return {
+          success: false,
+          error: err
+        };
+      }
+      // console.log(info.envelope);
+      // console.log(info.messageId);
+      return {
+        success: true,
+        envelope: info.envelope,
+        messageId: info.messageId
+      }
+    }
+  );
 };
 
 module.exports = sendEmail;
