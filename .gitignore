@@ -19,6 +19,7 @@
 =======
 .deploy.json
 >>>>>>> 2026f0e4014ebf17e506dfc8a58b87f7206c102a
+.user.ini
 .cpanel.yml
 .env.local
 .env.development.local
