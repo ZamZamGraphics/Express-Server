@@ -2,7 +2,7 @@ const { check, validationResult } = require("express-validator");
 const { resourceError } = require("../utilities/error");
 const Course = require("../models/Course");
 
-// batch validator
+// Admissaion validator
 const admissionValidators = [
   check("student")
     .isLength({ min: 1 })
@@ -46,11 +46,6 @@ const admissionValidators = [
     .isISO8601()
     .toDate()
     .withMessage("Select date in DD-MM-YYYY format"),
-  check("paymentType")
-    .isLength({ min: 1 })
-    .withMessage("Payment Type is required")
-    .isIn(["New", "Payment"])
-    .withMessage("Payment Type must be New or Payment"),
 ];
 
 const admissionValidationHandler = (req, res, next) => {

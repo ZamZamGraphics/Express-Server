@@ -51,14 +51,15 @@ app.use(express.static(path.join(__dirname, "public")));
 // parse cookies
 app.use(cookieParser(COOKIE_SECRET));
 
-app.use("/v1/api", require("./routers/apiRoute"));
-app.use("/v1/students", authenticate, require("./routers/studentRoute"));
-app.use("/v1/admission", authenticate, require("./routers/admissionRoute"));
-app.use("/v1/courses", authenticate, require("./routers/courseRoute"));
-app.use("/v1/batches", authenticate, require("./routers/batchRoute"));
-app.use("/v1/messages", authenticate, require("./routers/messagesRoute"));
-app.use("/v1/users", require("./routers/userRoute"));
-app.use("/v1/settings", authenticate, require("./routers/settingsRoute"));
+app.use("/v2/api", require("./routers/apiRoute"));
+app.use("/v2/students", authenticate, require("./routers/studentRoute"));
+app.use("/v2/admission", authenticate, require("./routers/admissionRoute"));
+app.use("/v2/courses", authenticate, require("./routers/courseRoute"));
+app.use("/v2/batches", authenticate, require("./routers/batchRoute"));
+app.use("/v2/employee", authenticate, require("./routers/employeeRoute"));
+app.use("/v2/messages", authenticate, require("./routers/messagesRoute"));
+app.use("/v2/users", require("./routers/userRoute"));
+app.use("/v2/settings", authenticate, require("./routers/settingsRoute"));
 
 // API Home Route
 app.get("/", (req, res) => {

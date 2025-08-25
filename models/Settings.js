@@ -2,18 +2,6 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const settingsSchema = new Schema({
-  siteTitle: {
-    type: String,
-    required: true,
-  },
-  tagline: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-  },
   perPage: {
     type: Number,
     required: true,
@@ -26,7 +14,15 @@ const settingsSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  token: String,
+  authentication: {
+    type: Boolean,
+    default: false,
+  },
+  darkMode: {
+    type: Boolean,
+    default: true,
+  },
+  user: { type: Schema.Types.ObjectId, ref: "User" }
 });
 
 const Settings = mongoose.model("Settings", settingsSchema);

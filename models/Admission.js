@@ -12,14 +12,21 @@ const admissionSchema = new Schema({
   batchNo: String,
   discount: Number,
   payableAmount: Number,
-  payment: Number,
-  due: Number,
   nextPay: Date,
   timeSchedule: String,
-  paymentType: {
+  status: {
     type: String,
-    enum: ["New", "Payment"],
+    enum: ["Unpaid", "Advanced", "Paid", "Canceled"],
+    default: "Advanced",
   },
+  paymentHistory: [
+    {
+      date: { type: Date, default: Date.now },
+      method: String,
+      transactionId: String,
+      amount: Number
+    }
+  ],
   user: { type: Schema.Types.ObjectId, ref: "User" },
   admitedAt: { type: Date, default: Date.now },
 });

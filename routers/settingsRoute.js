@@ -11,7 +11,6 @@ const {
 const router = require("express").Router();
 
 router.get("/", getSettings);
-router.get("/emailverify", updatedEmail);
 router.patch(
   "/:id",
   settingsValidators,

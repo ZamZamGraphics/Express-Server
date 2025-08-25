@@ -10,6 +10,10 @@ const {
   admissionValidators,
   admissionValidationHandler,
 } = require("../validator/admissionValidator");
+const {
+  paymentValidators,
+  paymentValidationHandler
+} = require("../validator/paymentValidator");
 
 const router = require("express").Router();
 
@@ -23,10 +27,11 @@ router.post(
   admissionValidationHandler,
   newAdmission
 );
+
 router.post(
   "/payment",
-  admissionValidators,
-  admissionValidationHandler,
+  paymentValidators,
+  paymentValidationHandler,
   payment
 );
 

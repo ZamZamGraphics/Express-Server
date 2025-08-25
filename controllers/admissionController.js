@@ -25,7 +25,6 @@ const allAdmission = async (req, res) => {
         { "student.studentId": search },
         { "student.fullName": { $regex: search, $options: "i" } },
         { "course.name": { $regex: search, $options: "i" } },
-        { paymentType: search },
         { batchNo: search },
       ],
     };
@@ -122,6 +121,8 @@ const newAdmission = async (req, res) => {
       nextPay,
       batch: batchNo,
       timeSchedule,
+      method,
+      transactionId
     } = req.body;
 
     const student = await Student.findOne({ studentId });
@@ -172,9 +173,16 @@ const newAdmission = async (req, res) => {
         courseFee: course.courseFee,
       },
       batchNo,
+      discount,
       payableAmount,
-      due,
       nextPay: nextPayment,
+      paymentHistory: [
+        {
+          method,
+          transactionId,
+          amount: payment
+        }
+      ],
       user: req.user.userid,
     });
 
@@ -212,6 +220,8 @@ const payment = async (req, res) => {
     discount,
     payment,
     nextPay,
+    method,
+    transactionId,
   } = req.body;
 
   const student = await Student.findOne({ studentId });
@@ -228,9 +238,7 @@ const payment = async (req, res) => {
   const admission = await Admission.findOne({
     student: student._id,
     batchNo: batch.batchNo,
-  })
-    .sort({ admitedAt: -1 })
-    .limit(1);
+  });
 
   if (!admission) {
     return resourceError(res, {
@@ -238,7 +246,11 @@ const payment = async (req, res) => {
     });
   }
 
-  const payableAmount = admission.due - (discount || 0);
+  const totalPay = admission?.paymentHistory?.reduce((total, history) => {
+    return total + history.amount
+  }, 0);
+
+  const payableAmount = totalPay - (discount || 0);
   const due = payableAmount - payment;
   const date = new Date();
   const nextDate = new Date(date.setDate(date.getDate() + 15));
@@ -248,22 +260,23 @@ const payment = async (req, res) => {
     nextPayment = nextDate;
   }
 
-  const admissionPayment = new Admission({
-    batchNo,
-    student: student._id,
-    course: admission.course,
-    discount,
-    payableAmount,
-    payment,
-    due,
-    nextPay: nextPayment,
-    paymentType: "Payment",
-    timeSchedule: admission.timeSchedule,
-    user: req.user.userid,
-  });
+  const admissionId = admission?._id;
+  const less = admission?.discount + (discount || 0);
 
-  // add New admission by paymentType is payment
-  const paymentData = await admissionPayment.save();
+  const updateData = await Admission.findByIdAndUpdate(
+    { _id: admissionId },
+    {
+      $set: { discount: less, nextPay: nextPayment },
+      $addToSet: {
+        paymentHistory: {
+          method,
+          transactionId,
+          amount: payment
+        },
+      },
+    },
+    { new: true }
+  );
 
   let totalDues = parseInt(payment) + parseInt(discount || 0);
 
@@ -277,7 +290,7 @@ const payment = async (req, res) => {
 
   res.status(200).json({
     message: "Payment Success!",
-    admission: paymentData,
+    admission: updateData,
   });
 };
 

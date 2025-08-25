@@ -1,12 +1,12 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Settings = require("../models/Settings");
 const { serverError, resourceError } = require("../utilities/error");
 const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
 const path = require("path");
 const { unlink } = require("fs");
-const siteTitle = require("../utilities/siteTitle");
 
 const allUser = async (req, res) => {
   try {
@@ -33,7 +33,7 @@ const allUser = async (req, res) => {
       .skip(limit * page) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
       .sort({ createdAt: -1 }); // Last  is First
-    res.status(200).json({users, total});
+    res.status(200).json({ users, total });
   } catch (error) {
     serverError(res, error);
   }
@@ -78,13 +78,24 @@ const register = async (req, res) => {
 
     const user = await newUser.save();
 
+    const settings = new Settings({
+      perPage: 20,
+      emailChecked: false,
+      smsChecked: false,
+      authentication: false,
+      darkMode: true,
+      token: null,
+      user: user._id
+    });
+
+    await settings.save();
+
     // send email to verify account
     const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-    const siteName = await siteTitle();
     const data = await ejs.renderFile(
       path.join(__dirname, `/../views/resendVerification.ejs`),
       {
-        sitename: siteName,
+        sitename: "AL MADINA IT",
         fullname: user.fullname,
         url: generateURL,
       }
@@ -159,11 +170,10 @@ const updateUser = async (req, res) => {
       });
       // send email to Resend Verification code
       const generateURL = `${process.env.APP_URL}/verify?token=${token}`;
-      const siteName = await siteTitle();
       const data = await ejs.renderFile(
         path.join(__dirname, `/../views/resendVerification.ejs`),
         {
-          sitename: siteName,
+          sitename: "AL MADINA IT",
           fullname: user.fullname,
           url: generateURL,
         }

@@ -16,6 +16,7 @@ const courseSchema = new Schema({
     type: String,
     trim: true,
   },
+  icon: String,
   courseType: {
     type: String,
     required: true,
