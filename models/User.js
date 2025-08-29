@@ -10,16 +10,27 @@ const userSchema = new Schema(
     username: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     email: {
       type: String,
       required: true,
       lowercase: true,
+      unique: true,
+      trim: true,
     },
     password: {
       type: String,
       required: true,
+    },
+    is2FAEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFASecret: {
+      type: String, // speakeasy secret (base32)
+      default: null,
     },
     status: {
       type: String,

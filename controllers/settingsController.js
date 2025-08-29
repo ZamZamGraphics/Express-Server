@@ -31,5 +31,4 @@ const updateSettings = async (req, res) => {
 module.exports = {
   getSettings,
   updateSettings,
-  updatedEmail,
 };

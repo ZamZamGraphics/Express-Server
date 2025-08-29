@@ -14,10 +14,6 @@ const settingsSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  authentication: {
-    type: Boolean,
-    default: false,
-  },
   darkMode: {
     type: Boolean,
     default: true,

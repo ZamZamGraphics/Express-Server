@@ -17,16 +17,32 @@ const PORT = process.env.PORT || 5000;
 const COOKIE_SECRET = process.env.COOKIE_SECRET || null;
 const DB_URL = process.env.MONGODB_URL || null;
 
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minutes
-  limit: 2000, // Limit each IP to 2000 request per windowMs
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+// Login Route Limiter (Brute Force Attack Protection)
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // ৫ মিনিট
+  limit: 5, // সর্বোচ্চ ৫ বার চেষ্টা করা যাবে
+  standardHeaders: true, // `RateLimit-*` হেডার পাঠাবে
+  legacyHeaders: false,
   handler: function (req, res) {
     return res.status(429).json({
-      message: "You sent too many requests. Please wait a while then try again",
+      message: "Too many login attempts. Please try again in 5 minutes.",
     });
   },
 });
+
+// General API Limiter (Public API usage)
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 মিনিট
+  limit: 100, // সর্বোচ্চ 100 বার চেষ্টা করা যাবে
+  standardHeaders: true, // `RateLimit-*` হেডার পাঠাবে
+  legacyHeaders: false,
+  handler: function (req, res) {
+    return res.status(429).json({
+      message: "Too many requests. Please try again later.",
+    });
+  },
+});
+
 
 app.use(
   helmet({
@@ -34,7 +50,6 @@ app.use(
   })
 );
 app.disable("x-powered-by");
-app.use(limiter);
 app.use(morgan("dev"));
 const whitelist = [process.env.APP_URL, process.env.ROOT_URL];
 const corsOptions = {
@@ -51,14 +66,20 @@ app.use(express.static(path.join(__dirname, "public")));
 // parse cookies
 app.use(cookieParser(COOKIE_SECRET));
 
-app.use("/v2/api", require("./routers/apiRoute"));
+app.use("/api/", apiLimiter);
+
+// Public Route
+app.use("/v2/api", apiLimiter, require("./routers/apiRoute"));
+app.use("/v2/auth", loginLimiter, require("./routers/loginRoute"));
+
+// Private Route
 app.use("/v2/students", authenticate, require("./routers/studentRoute"));
 app.use("/v2/admission", authenticate, require("./routers/admissionRoute"));
 app.use("/v2/courses", authenticate, require("./routers/courseRoute"));
 app.use("/v2/batches", authenticate, require("./routers/batchRoute"));
 app.use("/v2/employee", authenticate, require("./routers/employeeRoute"));
 app.use("/v2/messages", authenticate, require("./routers/messagesRoute"));
-app.use("/v2/users", require("./routers/userRoute"));
+app.use("/v2/users", authenticate, require("./routers/userRoute"));
 app.use("/v2/settings", authenticate, require("./routers/settingsRoute"));
 
 // API Home Route
@@ -78,9 +99,12 @@ app.use((req, res, next) => {
 
 // common error handler
 app.use((err, req, res, next) => {
-  error = err || { message: "500, Internal Server Error" };
+  console.error(err); // server side log
   res.status(err.status || 500);
-  res.json(error);
+  res.json({
+    message: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
+  });
 });
 
 app.listen(PORT, () => {

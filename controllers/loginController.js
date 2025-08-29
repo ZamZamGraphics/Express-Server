@@ -6,6 +6,7 @@ const { serverError, resourceError } = require("../utilities/error");
 const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
 const path = require("path");
+const speakeasy = require("speakeasy");
 
 // verify token
 const verification = async (req, res, next) => {
@@ -240,17 +241,17 @@ const login = async (req, res, next) => {
       );
 
       if (isValidPassword) {
-        // prepare the user object to generate token
-        const userObject = {
-          userid: user._id,
-          name: user.fullname,
-          status: user.status,
-          role: user.role,
-          expiresIn: process.env.JWT_EXPIRY,
-        };
+        // যদি 2FA enabled থাকে তাহলে পরবর্তী ধাপে OTP ভেরিফাই করতে হবে
+        if (user.is2FAEnabled) {
+          return res.json({
+            is2FAEnabled: true,
+            userid: user._id,
+            message: "Two Factor Authentication Required",
+          });
+        }
 
         // generate token
-        const token = jwt.sign(userObject, process.env.JWT_SECRET, {
+        const token = jwt.sign({ userid: user._id }, process.env.JWT_SECRET, {
           expiresIn: process.env.JWT_EXPIRY,
         });
 
@@ -266,9 +267,82 @@ const login = async (req, res, next) => {
       });
     }
   } catch (err) {
+    console.log(err)
     return serverError(res, err);
   }
 };
+
+// Setup, Reset/Enable Two Factor Authentication
+const setup2FA = async (req, res, next) => {
+  try {
+    const userid = req.user.userid
+    const secret = speakeasy.generateSecret();
+
+    // Update User with twoFASecret
+    await User.findByIdAndUpdate(userid, {
+      twoFASecret: secret.base32,
+      is2FAEnabled: true
+    });
+
+    // QR Code Generate
+    res.status(200).json({
+      message: "2FA Enabled Successfully",
+      otpauth_url: secret.otpauth_url,
+      secret: secret.base32
+    });
+
+  } catch (err) {
+    return serverError(res, err);
+  }
+}
+
+// Disable Two Factor Authentication
+const disable2FA = async (req, res, next) => {
+  try {
+    const userid = req.user.userid
+
+    // Update User
+    await User.findByIdAndUpdate(userid, {
+      twoFASecret: null,
+      is2FAEnabled: false
+    });
+
+    res.status(200).json({ message: "2FA Disabled Successfully" });
+
+  } catch (err) {
+    return serverError(res, err);
+  }
+}
+
+// Verify Two Factor Authentication
+const verify2FA = async (req, res, next) => {
+  try {
+    const { userid, token } = req.body;
+
+    const user = await User.findById(userid);
+    if (!user || !user.twoFASecret) {
+      return resourceError(res, { message: "2FA not setup" });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFASecret,
+      encoding: "base32",
+      token
+    });
+
+    if (!verified) {
+      return resourceError(res, { message: "Invalid OTP" });
+    }
+
+    // generate token
+    const jwtToken = jwt.sign({ userid: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRY,
+    });
+    res.status(200).json({ success: true, token: jwtToken });
+  } catch (err) {
+    return serverError(res, err);
+  }
+}
 
 module.exports = {
   verification,
@@ -276,4 +350,7 @@ module.exports = {
   forgotPassowrd,
   resetPassword,
   login,
+  setup2FA,
+  verify2FA,
+  disable2FA
 };

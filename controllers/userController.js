@@ -82,7 +82,6 @@ const register = async (req, res) => {
       perPage: 20,
       emailChecked: false,
       smsChecked: false,
-      authentication: false,
       darkMode: true,
       token: null,
       user: user._id
@@ -129,9 +128,17 @@ const updateUser = async (req, res) => {
     let id = req.params.id;
     const user = await User.findById(id);
 
-    let { fullname, email, status, role } = req.body;
+    const allowedFields = ["fullname", "email", "password", "status", "role"];
 
-    let { password } = req.body || "";
+    let updateFields = {};
+    for (let field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateFields[field] = req.body[field];
+      }
+    }
+
+    let email = req.body?.email;
+    let password = req.body?.password || null;
 
     let avatar = user.avatar;
     if (req.files && req.files.length > 0) {
@@ -147,22 +154,20 @@ const updateUser = async (req, res) => {
       avatar = req.files[0].filename;
     }
 
-    let newPassword;
+    updateFields.avatar = avatar;
     const { userid } = req.user;
 
-    if (!password || password.length === 0) {
-      newPassword = user.password;
-    } else {
+    if (password) {
       const match = await bcrypt.compare(password, user.password);
       const hash = bcrypt.hashSync(password, 11);
-      newPassword = match ? user.password : hash;
+      updateFields.password = match ? user.password : hash;
+
       if (userid === id) {
         res.clearCookie("accessToken");
         res.clearCookie("loggedIn");
       }
     }
 
-    let updatedData = {};
     let newEmail = false;
     if (email !== user.email) {
       const token = jwt.sign({ email }, process.env.JWT_SECRET, {
@@ -193,33 +198,17 @@ const updateUser = async (req, res) => {
       });
 
       newEmail = "Please verify your email address";
-      updatedData = {
-        fullname,
-        email,
-        password: newPassword,
-        status: "Unverified",
-        avatar,
-        role,
-        token,
-      };
+      updateFields.status = "Unverified";
 
       if (userid === id) {
         res.clearCookie("accessToken");
         res.clearCookie("loggedIn");
       }
-    } else {
-      updatedData = {
-        fullname,
-        password: newPassword,
-        status,
-        avatar,
-        role,
-      };
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { $set: updatedData },
+      { $set: updateFields },
       { new: true }
     );
 
