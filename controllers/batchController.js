@@ -6,25 +6,26 @@ const { serverError, resourceError } = require("../utilities/error");
 
 const allBatches = async (req, res) => {
   try {
-    const limit = req.query.limit || 0;
     const page = req.query.page || 0;
+    const limit = req.query.limit || 0;
+    const skip = (page - 1) * limit;
     let search = req.query.search || null;
     let from = req.query.from || "2022-08-24";
     let to = req.query.to || null;
 
     let searchQuery = {};
-    
-    if(from && to){
+
+    if (from && to) {
       from = new Date(from);
       to = new Date(to);
-      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
-      searchQuery = { startDate: { $gte: from, $lte: to }}
-    } else if(from && !to) {
+      to = new Date(to.getTime() + (3600 * 1000 * 24));
+      searchQuery = { startDate: { $gte: from, $lte: to } }
+    } else if (from && !to) {
       from = new Date(from);
-      searchQuery = { startDate: { $gte: from }}
+      searchQuery = { startDate: { $gte: from } }
     }
 
-    if(search) {
+    if (search) {
       searchQuery = {
         $or: [
           { batchNo: search },
@@ -41,10 +42,10 @@ const allBatches = async (req, res) => {
       .select({
         __v: 0,
       })
-      .skip(limit * page)
+      .skip(skip)
       .limit(limit)
       .sort({ startDate: -1 });
-    res.status(200).json({batches, total});
+    res.status(200).json({ batches, total });
   } catch (error) {
     serverError(res, error);
   }

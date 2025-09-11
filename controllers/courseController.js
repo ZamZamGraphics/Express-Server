@@ -3,8 +3,9 @@ const { serverError } = require("../utilities/error");
 
 const allCourses = async (req, res) => {
   try {
-    const limit = req.query.limit || 0;
     const page = req.query.page || 0;
+    const limit = req.query.limit || 0;
+    const skip = (page - 1) * limit;
     let search = req.query.search || null;
 
     const searchQuery = {
@@ -21,10 +22,10 @@ const allCourses = async (req, res) => {
         __v: 0,
       })
       // coursess?page=1&limit=10&search=value
-      .skip(limit * page) // Page Number * Show Par Page
+      .skip(skip) // Page Number * Show Par Page
       .limit(limit) // Show Par Page
       .sort({ name: 1 }); // Last is First
-    res.status(200).json({courses, total});
+    res.status(200).json({ courses, total });
   } catch (error) {
     serverError(res, error);
   }

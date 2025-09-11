@@ -7,8 +7,9 @@ const { sendSMS } = require("../utilities/sendMessages");
 
 const allAdmission = async (req, res) => {
   try {
-    const limit = req.query.limit || 0;
     const page = req.query.page || 0;
+    const limit = req.query.limit || 0;
+    const skip = (page - 1) * limit;
     let search = req.query.search || null;
 
     const from = req.query.from || "2022-08-24";
@@ -54,7 +55,7 @@ const allAdmission = async (req, res) => {
         $facet: {
           admission: [
             { $sort: { admitedAt: -1 } },
-            { $skip: limit * page },
+            { $skip: skip },
             { $limit: parseInt(limit) },
           ],
           total: [{ $count: "totalRecords" }],

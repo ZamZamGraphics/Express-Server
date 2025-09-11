@@ -8,17 +8,18 @@ const { unlink } = require("fs");
 
 const allStudents = async (req, res) => {
   try {
-    const limit = req.query.limit || 0;
     const page = req.query.page || 0;
+    const limit = req.query.limit || 0;
+    const skip = (page - 1) * limit;
     let search = req.query.search || null;
 
     const from = req.query.from || "2022-08-24";
-    let to ;
-    if(req.query.to){
+    let to;
+    if (req.query.to) {
       to = new Date(req.query.to);
-      to = new Date(to.getTime() + ( 3600 * 1000 * 24));
+      to = new Date(to.getTime() + (3600 * 1000 * 24));
     } else {
-      to = new Date(Date.now() + ( 3600 * 1000 * 24));
+      to = new Date(Date.now() + (3600 * 1000 * 24));
     }
 
     const searchQuery = {
@@ -53,18 +54,20 @@ const allStudents = async (req, res) => {
           as: "admissionDetails"
         }
       },
-      {$match:search},
-      {$match: {
-        $and: [
-          { registeredAt: { $gte: new Date(from) } },
-          { registeredAt: { $lte: new Date(to) } }
-        ]
-      }},
+      { $match: search },
+      {
+        $match: {
+          $and: [
+            { registeredAt: { $gte: new Date(from) } },
+            { registeredAt: { $lte: new Date(to) } }
+          ]
+        }
+      },
       {
         $facet: {
           students: [
             { $sort: { registeredAt: -1 } },
-            { $skip: limit * page },
+            { $skip: skip },
             { $limit: parseInt(limit) }
           ],
           total: [{ $count: "totalRecords" }]

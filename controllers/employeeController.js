@@ -5,8 +5,9 @@ const { unlink } = require("fs");
 
 const allEmployee = async (req, res) => {
     try {
-        const limit = req.query.limit || 0;
         const page = req.query.page || 0;
+        const limit = req.query.limit || 0;
+        const skip = (page - 1) * limit;
         let search = req.query.search || null;
 
         const searchQuery = {
@@ -31,7 +32,7 @@ const allEmployee = async (req, res) => {
                 __v: 0,
             })
             // users?page=1&limit=10&search=value
-            .skip(limit * page) // Page Number * Show Par Page
+            .skip(skip) // Page Number * Show Par Page
             .limit(parseInt(limit)) // Show Par Page
             .sort({ registeredAt: -1 }); // Last  is First
         res.status(200).json({ employeeList, total });
