@@ -131,6 +131,10 @@ const register = async (req, res) => {
     const { studentId: newID } = studentId || { studentId: 201100 }; // Last Student Id Number
     const stdPhone = validMobileNumber(req.body.stdPhone);
     const guardianPhone = validMobileNumber(req.body.guardianPhone) || "";
+    const address = {
+      present: req.body.present,
+      permanent: req.body.permanent
+    }
 
     let newStudent;
     if (req.files && req.files.length > 0) {
@@ -138,6 +142,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
+        address,
         user: req.user.userid,
         avatar: req.files[0].filename,
       });
@@ -146,6 +151,7 @@ const register = async (req, res) => {
         ...req.body,
         studentId: Math.floor(newID) + 1,
         phone: [stdPhone, guardianPhone],
+        address,
         user: req.user.userid,
         avatar: null,
       });

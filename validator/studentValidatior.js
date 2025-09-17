@@ -17,7 +17,7 @@ const studentValidators = [
     .isLength({ min: 3 })
     .withMessage("Mothers Name is required")
     .trim(),
-  check("address.present")
+  check("present")
     .isLength({ min: 1 })
     .withMessage("Address is required")
     .trim(),
