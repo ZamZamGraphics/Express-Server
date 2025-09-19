@@ -5,6 +5,7 @@ const {
   newAdmission,
   deleteAdmission,
   payment,
+  migratePaymentsBulk,
 } = require("../controllers/admissionController");
 const {
   admissionValidators,
@@ -17,6 +18,7 @@ const {
 
 const router = require("express").Router();
 
+router.get("/migrate", migratePaymentsBulk);
 router.get("/", allAdmission);
 router.get("/:id", admissionById);
 router.get("/:batchNo/:studentId", findByStdId);

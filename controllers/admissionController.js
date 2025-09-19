@@ -165,7 +165,6 @@ const newAdmission = async (req, res) => {
     }
 
     const newAdmission = new Admission({
-      ...req.body,
       student: student._id,
       course: {
         id: course._id,
@@ -179,11 +178,13 @@ const newAdmission = async (req, res) => {
       nextPay: nextPayment,
       paymentHistory: [
         {
+          date: new Date(),
+          amount: payment,
           method,
           transactionId,
-          amount: payment
         }
       ],
+      timeSchedule,
       user: req.user.userid,
     });
 
@@ -247,12 +248,16 @@ const payment = async (req, res) => {
     });
   }
 
+  const courseFee = admission?.course?.courseFee;
   const totalPay = admission?.paymentHistory?.reduce((total, history) => {
     return total + history.amount
   }, 0);
 
-  const payableAmount = totalPay - (discount || 0);
-  const due = payableAmount - payment;
+  const less = parseInt(admission?.discount) + parseInt(discount || 0);
+  const prevDue = parseInt(admission?.payableAmount) - totalPay;
+  const subTotal = prevDue - discount;
+
+  const due = subTotal - payment;
   const date = new Date();
   const nextDate = new Date(date.setDate(date.getDate() + 15));
 
@@ -262,18 +267,22 @@ const payment = async (req, res) => {
   }
 
   const admissionId = admission?._id;
-  const less = admission?.discount + (discount || 0);
-
   const updateData = await Admission.findByIdAndUpdate(
     { _id: admissionId },
     {
-      $set: { discount: less, nextPay: nextPayment },
-      $addToSet: {
+      $set: {
+        discount: less,
+        nextPay: nextPayment,
+        payableAmount: courseFee - less,
+        status: due > 0 ? "Advanced" : "Paid"
+      },
+      $push: {
         paymentHistory: {
+          date: new Date(),
+          amount: payment,
           method,
           transactionId,
-          amount: payment
-        },
+        }
       },
     },
     { new: true }
@@ -385,6 +394,41 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
   }
 };
 
+const migratePaymentsBulk = async (req, res) => {
+  try {
+    // updateMany + aggregation pipeline
+    const result = await Admission.updateMany(
+      { payment: { $exists: true } }, // শুধু যাদের payment আছে
+      [
+        {
+          $set: {
+            // paymentHistory যদি না থাকে, নতুন array create করবে
+            paymentHistory: {
+              $concatArrays: [
+                { $ifNull: ["$paymentHistory", []] },
+                [
+                  {
+                    date: "$admitedAt",
+                    amount: "$payment",
+                    method: "Cash",
+                    transactionId: null,
+                  },
+                ],
+              ],
+            },
+          },
+        },
+        { $unset: ["payment", "paymentType", "due"] }, // optional: remove old payment field
+      ]
+    );
+
+    res.status(200).json({ message: "Migration completed", result });
+  } catch (error) {
+    console.log(error)
+    serverError(res, error);
+  }
+};
+
 module.exports = {
   allAdmission,
   admissionById,
@@ -392,4 +436,5 @@ module.exports = {
   newAdmission,
   payment,
   deleteAdmission,
+  migratePaymentsBulk
 };
