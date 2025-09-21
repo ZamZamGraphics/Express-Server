@@ -7,20 +7,24 @@ const { sendSMS } = require("../utilities/sendMessages");
 
 const allAdmission = async (req, res) => {
   try {
-    const page = req.query.page || 0;
-    const limit = req.query.limit || 0;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    let search = req.query.search || null;
+    const sortBy = req.query.sortBy || "lastPaymentDate";
+    const sortOrder = req.query.sortOrder || -1;
 
-    const from = req.query.from || "2022-08-24";
-    let to;
+    // Date filter
+    const dateFilter = {};
+    if (req.query.from) {
+      dateFilter.$gte = new Date(req.query.from);
+    }
     if (req.query.to) {
-      to = new Date(req.query.to);
-      to = new Date(to.getTime() + 3600 * 1000 * 24);
-    } else {
-      to = new Date(Date.now() + 3600 * 1000 * 24);
+      const endDate = new Date(req.query.to);
+      endDate.setHours(23, 59, 59, 999); // include full day
+      dateFilter.$lte = endDate;
     }
 
+    let search = req.query.search || null;
     const searchQuery = {
       $or: [
         { "student.studentId": search },
@@ -30,6 +34,12 @@ const allAdmission = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
+
+    const matchStage = { ...search };
+    if (Object.keys(dateFilter).length > 0) {
+      matchStage.admitedAt = dateFilter;
+    }
+
     const result = await Admission.aggregate([
       {
         $lookup: {
@@ -39,30 +49,24 @@ const allAdmission = async (req, res) => {
           as: "student",
         },
       },
-      {
-        $unwind: "$student",
-      },
-      { $match: search },
-      {
-        $match: {
-          $and: [
-            { admitedAt: { $gte: new Date(from) } },
-            { admitedAt: { $lte: new Date(to) } },
-          ],
-        },
-      },
+      { $unwind: "$student" },
+      { $match: matchStage },
+      { $addFields: { lastPaymentDate: { $max: "$paymentHistory.date" } } },
       {
         $facet: {
           admission: [
-            { $sort: { admitedAt: -1 } },
+            { $sort: { [sortBy]: sortOrder } },
             { $skip: skip },
             { $limit: parseInt(limit) },
+            { $project: { lastPaymentDate: 0 } }
           ],
-          total: [{ $count: "totalRecords" }],
+          total: [{ $count: "total" }],
         },
       },
+      { $addFields: { total: { $ifNull: [{ $arrayElemAt: ["$total.total", 0] }, 0] } } },
+      { $replaceRoot: { newRoot: { admission: "$admission", total: "$total" } } }
     ]);
-    res.status(200).json(result);
+    res.status(200).json(result[0]);
   } catch (error) {
     serverError(res, error);
   }

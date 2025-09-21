@@ -6,39 +6,41 @@ const { serverError, resourceError } = require("../utilities/error");
 
 const allBatches = async (req, res) => {
   try {
-    const page = req.query.page || 0;
-    const limit = req.query.limit || 0;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+
+    // Date filter
+    const dateFilter = {};
+    if (req.query.from) {
+      dateFilter.$gte = new Date(req.query.from);
+    }
+    if (req.query.to) {
+      const endDate = new Date(req.query.to);
+      endDate.setHours(23, 59, 59, 999); // include full day
+      dateFilter.$lte = endDate;
+    }
+
     let search = req.query.search || null;
-    let from = req.query.from || "2022-08-24";
-    let to = req.query.to || null;
+    const searchQuery = {
+      $or: [
+        { batchNo: search },
+        { student: search },
+        { "course.name": { $regex: search, $options: "i" } },
+        { "course.courseType": { $regex: search, $options: "i" } },
+        { classDays: { $regex: search, $options: "i" } },
+        { classTime: { $regex: search, $options: "i" } },
+      ],
+    }
+    search = search ? searchQuery : {};
 
-    let searchQuery = {};
-
-    if (from && to) {
-      from = new Date(from);
-      to = new Date(to);
-      to = new Date(to.getTime() + (3600 * 1000 * 24));
-      searchQuery = { startDate: { $gte: from, $lte: to } }
-    } else if (from && !to) {
-      from = new Date(from);
-      searchQuery = { startDate: { $gte: from } }
+    const matchStage = { ...search };
+    if (Object.keys(dateFilter).length > 0) {
+      matchStage.startDate = dateFilter;
     }
 
-    if (search) {
-      searchQuery = {
-        $or: [
-          { batchNo: search },
-          { student: search },
-          { "course.name": { $regex: search, $options: "i" } },
-          { "course.courseType": { $regex: search, $options: "i" } },
-          { classDays: { $regex: search, $options: "i" } },
-          { classTime: { $regex: search, $options: "i" } },
-        ],
-      }
-    }
-    const total = await Batch.count(searchQuery);
-    const batches = await Batch.find(searchQuery)
+    const total = await Batch.count(matchStage);
+    const batches = await Batch.find(matchStage)
       .select({
         __v: 0,
       })

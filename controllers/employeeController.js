@@ -5,11 +5,22 @@ const { unlink } = require("fs");
 
 const allEmployee = async (req, res) => {
     try {
-        const page = req.query.page || 0;
-        const limit = req.query.limit || 0;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        let search = req.query.search || null;
 
+        // Date filter
+        const dateFilter = {};
+        if (req.query.from) {
+            dateFilter.$gte = new Date(req.query.from);
+        }
+        if (req.query.to) {
+            const endDate = new Date(req.query.to);
+            endDate.setHours(23, 59, 59, 999); // include full day
+            dateFilter.$lte = endDate;
+        }
+
+        let search = req.query.search || null;
         const searchQuery = {
             $or: [
                 { fullName: { $regex: search, $options: "i" } },
@@ -26,15 +37,20 @@ const allEmployee = async (req, res) => {
             ],
         };
         search = search ? searchQuery : {};
-        const total = await Employee.count(search);
-        const employeeList = await Employee.find(search)
+
+        const matchStage = { ...search };
+        if (Object.keys(dateFilter).length > 0) {
+            matchStage.registeredAt = dateFilter;
+        }
+
+        const total = await Employee.count(matchStage);
+        const employeeList = await Employee.find(matchStage)
             .select({
                 __v: 0,
             })
-            // users?page=1&limit=10&search=value
-            .skip(skip) // Page Number * Show Par Page
-            .limit(parseInt(limit)) // Show Par Page
-            .sort({ registeredAt: -1 }); // Last  is First
+            .skip(skip)
+            .limit(parseInt(limit))
+            .sort({ registeredAt: -1 });
         res.status(200).json({ employeeList, total });
     } catch (error) {
         serverError(res, error);

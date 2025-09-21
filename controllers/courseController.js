@@ -3,11 +3,11 @@ const { serverError } = require("../utilities/error");
 
 const allCourses = async (req, res) => {
   try {
-    const page = req.query.page || 0;
-    const limit = req.query.limit || 0;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    let search = req.query.search || null;
 
+    let search = req.query.search || null;
     const searchQuery = {
       $or: [
         { courseType: search },
@@ -16,15 +16,15 @@ const allCourses = async (req, res) => {
       ],
     };
     search = search ? searchQuery : {};
+
     const total = await Course.count(search);
     const courses = await Course.find(search)
       .select({
         __v: 0,
       })
-      // coursess?page=1&limit=10&search=value
-      .skip(skip) // Page Number * Show Par Page
-      .limit(limit) // Show Par Page
-      .sort({ name: 1 }); // Last is First
+      .skip(skip)
+      .limit(limit)
+      .sort({ name: 1 });
     res.status(200).json({ courses, total });
   } catch (error) {
     serverError(res, error);
