@@ -250,12 +250,20 @@ const login = async (req, res, next) => {
           });
         }
 
+        const userInfo = {
+          userid: user._id,
+          avatar: user.avatar,
+          fullname: user.fullname,
+          status: user.status,
+          role: user.role
+        }
+
         // generate token
         const token = jwt.sign({ userid: user._id }, process.env.JWT_SECRET, {
           expiresIn: process.env.JWT_EXPIRY,
         });
 
-        res.status(200).json({ success: true, token });
+        res.status(200).json({ success: true, user: userInfo, token });
       } else {
         return resourceError(res, {
           message: "The password is incorrect!",
