@@ -32,17 +32,22 @@ const employeeValidators = [
         .withMessage("Gender is required")
         .isIn(["Male", "Female"])
         .withMessage("Gender must be Male or Female"),
-    check("selfNumber")
+    check("phonePrimary")
         .isLength({ min: 1 })
         .withMessage("Mobile number required")
         .isInt()
         .isMobilePhone("bn-BD")
         .withMessage("Mobile number invalid"),
-    check("homeNumber")
+    check("phoneSecondary")
         .isInt()
         .optional({ checkFalsy: true })
         .isMobilePhone("bn-BD")
         .withMessage("Mobile number invalid"),
+    check("status")
+        .isLength({ min: 1 })
+        .withMessage("Select status")
+        .isIn(["Full Time", "Part Time", "Fixed Term", "Intern", "Resigned", "Terminated"])
+        .withMessage("Invalid status"),
     check("email")
         .isEmail()
         .optional({ checkFalsy: true })

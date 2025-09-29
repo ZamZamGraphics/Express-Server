@@ -30,6 +30,7 @@ const allEmployee = async (req, res) => {
                 { gender: search },
                 { phone: search },
                 { email: search },
+                { status: search },
                 { designation: { $regex: search, $options: "i" } },
                 { nid: search },
                 { bloodGroup: { $regex: search, $options: "i" } },
@@ -44,14 +45,14 @@ const allEmployee = async (req, res) => {
         }
 
         const total = await Employee.count(matchStage);
-        const employeeList = await Employee.find(matchStage)
+        const result = await Employee.find(matchStage)
             .select({
                 __v: 0,
             })
             .skip(skip)
             .limit(parseInt(limit))
             .sort({ registeredAt: -1 });
-        res.status(200).json({ employeeList, total });
+        res.status(200).json({ employee: result, total });
     } catch (error) {
         serverError(res, error);
     }
@@ -76,21 +77,21 @@ const employeeById = async (req, res) => {
 
 const register = async (req, res) => {
     try {
-        const selfNumber = req.body?.selfNumber;
-        const homeNumber = req.body?.homeNumber || "";
+        const phonePrimary = req.body?.phonePrimary;
+        const phoneSecondary = req.body?.phoneSecondary || "";
 
         let newEmployee;
         if (req.files && req.files.length > 0) {
             newEmployee = new Employee({
                 ...req.body,
-                phone: [selfNumber, homeNumber],
+                phone: [phonePrimary, phoneSecondary],
                 user: req.user.userid,
                 avatar: req.files[0].filename,
             });
         } else {
             newEmployee = new Employee({
                 ...req.body,
-                phone: [selfNumber, homeNumber],
+                phone: [phonePrimary, phoneSecondary],
                 user: req.user.userid,
                 avatar: null,
             });
@@ -111,8 +112,8 @@ const updateEmployee = async (req, res) => {
         let { id } = req.params;
         const employee = await Employee.findById(id);
 
-        const selfNumber = req.body.selfNumber;
-        const homeNumber = req.body.homeNumber || "";
+        const phonePrimary = req.body?.phonePrimary;
+        const phoneSecondary = req.body?.phoneSecondary || "";
 
         let avatar = employee.avatar;
         if (req.files && req.files.length > 0) {
@@ -131,7 +132,7 @@ const updateEmployee = async (req, res) => {
         const updatedData = {
             ...req.body,
             avatar,
-            phone: [selfNumber, homeNumber],
+            phone: [phonePrimary, phoneSecondary],
         };
 
         const updateData = await Employee.findByIdAndUpdate(
