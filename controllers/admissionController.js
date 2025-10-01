@@ -311,59 +311,42 @@ const payment = async (req, res) => {
 const deleteAdmission = async (req, res) => {
   try {
     let id = req.params.id;
-    // find Last Admited
     const admission = await Admission.findById(id);
-    const lastAdmited = await Admission.findOne({
-      student: admission.student,
-    })
-      .sort({ admitedAt: -1 })
-      .limit(1);
-    const student = await Student.findById({ _id: lastAdmited.student._id });
-    const batch = await Batch.findOne({ batchNo: lastAdmited.batchNo });
-
-    if (JSON.stringify(lastAdmited._id) !== JSON.stringify(admission._id)) {
-      return resourceError(res, {
-        message: "This admission cannot be deleted!",
-      });
-    }
+    const student = await Student.findById({ _id: admission.student._id });
+    const batch = await Batch.findOne({ batchNo: admission.batchNo });
 
     const filteredAdmisstion = student.admission.filter(
       (admissionId) =>
         JSON.stringify(admissionId) !== JSON.stringify(admission._id)
     );
 
-    // update student due
-    if (admission.paymentType == "New") {
-      await Student.findByIdAndUpdate(
-        { _id: student._id },
-        {
-          $pull: { admission: admission._id },
-          $set: {
-            status: filteredAdmisstion.length > 0 ? student.status : "Canceled",
-            totalDues: student.totalDues - admission.due,
-          },
-        }
-      );
+    const totalPay = admission?.paymentHistory?.reduce((total, history) => {
+      return total + history.amount
+    }, 0);
+    const due = admission?.payableAmount - totalPay;
 
-      // remove student ID from Batch
-      await Batch.findByIdAndUpdate(
-        { _id: batch._id },
-        { $pull: { student: student.studentId } }
-      );
-    } else if (admission.paymentType == "Payment") {
-      const payment = admission.payment + (admission.discount || 0);
-      await Student.findByIdAndUpdate(
-        { _id: student._id },
-        {
-          $set: { totalDues: student.totalDues + payment },
-        }
-      );
-    }
+    // update student due
+    await Student.findByIdAndUpdate(
+      { _id: student._id },
+      {
+        $pull: { admission: admission._id },
+        $set: {
+          status: filteredAdmisstion.length > 0 ? student.status : "Canceled",
+          totalDues: student.totalDues - due,
+        },
+      }
+    );
+
+    // remove student ID from Batch
+    await Batch.findByIdAndUpdate(
+      { _id: batch._id },
+      { $pull: { student: student.studentId } }
+    );
 
     // finally delete admission
     await Admission.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Admission was deleted!" });
+    res.status(200).json({ success: true, message: "Admission was deleted!" });
   } catch (error) {
     serverError(res, error);
   }

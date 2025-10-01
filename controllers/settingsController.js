@@ -3,7 +3,7 @@ const { serverError } = require("../utilities/error");
 
 const getSettings = async (req, res) => {
   try {
-    const result = await Settings.find({ user: req.user.userid });
+    const result = await Settings.findOne({ user: req.user.userid });
     res.status(200).json(result);
   } catch (err) {
     serverError(res, err);
@@ -20,8 +20,9 @@ const updateSettings = async (req, res) => {
     );
 
     res.status(200).json({
+      success: true,
       message: "Settings was updated successfully",
-      updatedData,
+      result: updatedData,
     });
   } catch (err) {
     serverError(res, err);
