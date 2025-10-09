@@ -78,6 +78,7 @@ app.use("/v2/admission", authenticate, require("./routers/admissionRoute"));
 app.use("/v2/courses", authenticate, require("./routers/courseRoute"));
 app.use("/v2/batches", authenticate, require("./routers/batchRoute"));
 app.use("/v2/employee", authenticate, require("./routers/employeeRoute"));
+app.use("/v2/expenses", authenticate, require("./routers/expenseRoute"));
 app.use("/v2/messages", authenticate, require("./routers/messagesRoute"));
 app.use("/v2/users", authenticate, require("./routers/userRoute"));
 app.use("/v2/settings", authenticate, require("./routers/settingsRoute"));
