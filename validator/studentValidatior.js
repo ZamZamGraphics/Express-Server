@@ -67,7 +67,7 @@ const studentValidators = [
     })
     .withMessage("Birth Certificate No must be 17 digits"),
   check("status")
-    .isIn(["Approved", "Pending", "Rejected"])
+    .isIn(["Approved", "Pending", "Canceled"])
     .withMessage("Invalid Status field"),
 ];
 
