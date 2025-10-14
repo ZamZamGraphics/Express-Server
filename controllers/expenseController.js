@@ -33,8 +33,8 @@ const allExpense = async (req, res) => {
             matchStage.date = dateFilter;
         }
 
-        const total = await Expense.count(search);
-        const expenses = await Expense.find(search)
+        const total = await Expense.count(matchStage);
+        const expenses = await Expense.find(matchStage)
             .populate({
                 path: "user",
                 select: "fullname",
