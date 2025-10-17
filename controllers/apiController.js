@@ -2,6 +2,7 @@ const Admission = require("../models/Admission");
 const Student = require("../models/Student");
 const Batch = require("../models/Batch");
 const Course = require("../models/Course");
+const Employee = require("../models/Employee");
 const { serverError, resourceError } = require("../utilities/error");
 const dayjs = require("dayjs");
 const isBetween = require("dayjs/plugin/isBetween");
@@ -20,20 +21,18 @@ const findStudent = async (req, res) => {
     const result = await Admission.findOne({
       student: student._id,
       batchNo,
-      paymentType: "New",
-    })
-      .populate({
-        path: "student",
-        select:
-          "studentId avatar fullName fathersName mothersName address phone status",
-      })
-      .sort({ admitedAt: -1 })
-      .limit(1);
+    }).populate({
+      path: "student",
+      select:
+        "studentId avatar fullName fathersName mothersName address phone status",
+    });
+
     if (!result) {
       return resourceError(res, {
         message: "Student ID & Batch No did not matched!",
       });
     }
+
     const batch = await Batch.findOne({ batchNo: batchNo });
     const course = await Course.findById(batch.course.id);
 
@@ -43,8 +42,8 @@ const findStudent = async (req, res) => {
     )
       ? "Running"
       : dayjs().isBefore(dayjs(batch.startDate))
-      ? "Upcoming"
-      : "Completed";
+        ? "Upcoming"
+        : "Completed";
 
     const finalResult = {
       name: result?.student?.fullName,
@@ -59,12 +58,34 @@ const findStudent = async (req, res) => {
       courseName: course?.name,
       duration: course?.duration,
     };
-    res.status(200).json({ student: finalResult });
+    res.status(200).json(finalResult);
   } catch (error) {
     serverError(res, error);
   }
 };
 
+const getAllMentors = async (req, res) => {
+  try {
+    const data = await Employee.find()
+      .select({
+        __v: 0,
+      })
+      .sort({ registeredAt: -1 });
+    const mentors = data.map((mentor) => {
+      return {
+        id: mentor._id,
+        name: mentor.fullName,
+        designation: mentor.designation,
+        avatar: mentor.avatar,
+      }
+    })
+    res.status(200).json(mentors)
+  } catch (error) {
+    serverError(res, error);
+  }
+}
+
 module.exports = {
   findStudent,
+  getAllMentors,
 };
