@@ -1,4 +1,5 @@
 const express = require("express");
+const useragent = require('express-useragent');
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const helmet = require("helmet");
@@ -25,7 +26,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   handler: function (req, res) {
     return res.status(429).json({
-      message: "Too many login attempts. Please try again in 5 minutes.",
+      errors: { message: "Too many login attempts. Please try again in 5 minutes." }
     });
   },
 });
@@ -38,11 +39,10 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   handler: function (req, res) {
     return res.status(429).json({
-      message: "Too many requests. Please try again later.",
+      errors: { message: "Too many requests. Please try again later." }
     });
   },
 });
-
 
 app.use(
   helmet({
@@ -51,13 +51,17 @@ app.use(
 );
 app.disable("x-powered-by");
 app.use(morgan("dev"));
-const whitelist = [process.env.APP_URL, process.env.ROOT_URL];
+const whitelist = [
+  process.env.ROOT_URL,
+  process.env.WWW_URL,
+  process.env.APP_URL,
+];
 const corsOptions = {
   origin: whitelist
 }
 
 app.use(cors(corsOptions));
-
+app.use(useragent.express());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -70,7 +74,7 @@ app.use("/api/", apiLimiter);
 
 // Public Route
 app.use("/v2/api", apiLimiter, require("./routers/apiRoute"));
-app.use("/v2/auth", loginLimiter, require("./routers/loginRoute"));
+app.use("/v2/auth", loginLimiter, require("./routers/authRoute"));
 
 // Private Route
 app.use("/v2/students", authenticate, require("./routers/studentRoute"));

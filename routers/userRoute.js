@@ -1,8 +1,5 @@
 const router = require("express").Router();
-const {
-  setup2FA,
-  disable2FA,
-} = require("../controllers/loginController");
+
 const {
   register,
   allUser,
@@ -31,10 +28,6 @@ router.post(
   userValidationHandler,
   register
 );
-
-router.post("/setup2fa", setup2FA);
-router.post("/enable2fa", setup2FA);
-router.post("/disable2fa", disable2FA);
 
 router.patch(
   "/:id",
