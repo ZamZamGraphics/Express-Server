@@ -7,14 +7,14 @@ const smsOptions = {
     senderId: process.env.SENDERID,
 };
 
-const sendSMS = async ({numbers, messages}) => {
-    try{
-        const {data} = await axios.get(smsOptions.url, {
+const sendSMS = async ({ numbers, message }) => {
+    try {
+        const { data } = await axios.get(smsOptions.url, {
             params: {
                 apiKey: smsOptions.apiKey,
                 senderId: smsOptions.senderId,
                 contactNumbers: numbers,
-                textBody: messages,
+                textBody: message,
             }
         })
         return data;
@@ -24,9 +24,9 @@ const sendSMS = async ({numbers, messages}) => {
 }
 
 const smsBalance = async () => {
-    try{
+    try {
         const url = process.env.SMSURL + "/balance?apiKey=" + process.env.APIKEY;
-        const {data} = await axios.get(url);
+        const { data } = await axios.get(url);
         return data;
     } catch (error) {
         createError(error.message);

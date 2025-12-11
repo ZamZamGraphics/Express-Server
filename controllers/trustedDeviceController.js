@@ -4,7 +4,7 @@ const { serverError } = require("../utilities/error");
 const getTrustedDevice = async (req, res) => {
     try {
         const userid = req.user.userid;
-        const trusted = await TrustedDevice.find({ userid });
+        const trusted = await TrustedDevice.find({ userid }).sort({ addedAt: -1 });
         const total = await TrustedDevice.count({ userid });
         res.status(200).json({ trusted, total });
     } catch (error) {

@@ -1,11 +1,19 @@
 const crypto = require("crypto");
 
 const generateDeviceId = (req) => {
-    const ip = req.ip;
-    const { os, browser } = req.useragent;
-    const baseString = `${ip}-${browser}-${os}`;
+    const ua = req.useragent;
 
-    return crypto.createHash("sha256").update(baseString).digest("hex");
+    const data = [
+        ua.browser,
+        ua.version,
+        ua.os,
+        ua.platform,
+        ua.source,
+        req.headers["accept-language"] || "",
+        req.ip || ""
+    ].join("|");
+
+    return crypto.createHash("sha256").update(data).digest("hex");
 }
 
 module.exports = generateDeviceId;
