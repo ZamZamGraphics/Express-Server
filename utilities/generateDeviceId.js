@@ -1,7 +1,9 @@
 const crypto = require("crypto");
+const getClientIp = require("./getClientIp");
 
 const generateDeviceId = (req) => {
     const ua = req.useragent;
+    const clientIp = getClientIp(req);
 
     const data = [
         ua.browser,
@@ -10,7 +12,7 @@ const generateDeviceId = (req) => {
         ua.platform,
         ua.source,
         req.headers["accept-language"] || "",
-        req.ip || ""
+        clientIp || ""
     ].join("|");
 
     return crypto.createHash("sha256").update(data).digest("hex");

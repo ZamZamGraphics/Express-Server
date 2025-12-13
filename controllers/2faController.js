@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const getClientIp = require("../utilities/getClientIp");
 const TrustedDevice = require("../models/TrustedDevice");
 const { serverError, resourceError } = require("../utilities/error");
 const speakeasy = require("speakeasy");
@@ -108,13 +109,14 @@ const complete2FALogin = async (req, res) => {
         const exists = await TrustedDevice.findOne({ userid, deviceId });
 
         if (!exists) {
+            const clientIp = getClientIp(req);
             await TrustedDevice.create({
                 userid,
                 deviceId,
                 device,
                 os: ua.os,
                 browser: ua.browser,
-                ip: req.ip
+                ip: clientIp
             });
         }
 
