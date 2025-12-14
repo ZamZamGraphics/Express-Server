@@ -43,7 +43,7 @@ const apiLimiter = rateLimit({
     });
   },
 });
-app.set('trust proxy', true);
+app.set('trust proxy', 2);
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
