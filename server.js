@@ -57,10 +57,22 @@ const whitelist = [
   process.env.APP_URL,
 ];
 const corsOptions = {
-  origin: whitelist
-}
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow curl / server-side
+    if (whitelist.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,            // 🔑 REQUIRED
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // 🔑 preflight fix
+
 app.use(useragent.express());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
