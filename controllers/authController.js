@@ -1,4 +1,5 @@
-const crypto = require("crypto");
+const getClientIp = require("../utilities/getClientIp");
+const generateOTP = require("../utilities/generateOTP");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
@@ -116,7 +117,13 @@ const forgotPassowrd = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (user) {
-      const token = crypto.randomBytes(32).toString("hex");
+      const clientIp = getClientIp(req);
+      const otp = generateOTP();
+      // generate token
+      const token = jwt.sign({ otp }, process.env.JWT_SECRET, {
+        expiresIn: 60 * 5,
+      });
+
       await User.updateOne({ email }, { $set: { token } });
 
       // send reset link with token to user email
@@ -128,6 +135,7 @@ const forgotPassowrd = async (req, res) => {
           sitename: "AL MADINA IT",
           fullname: user.fullname,
           url: generateURL,
+          ip: clientIp
         }
       );
 
@@ -145,6 +153,8 @@ const forgotPassowrd = async (req, res) => {
       });
       res.status(200).json({
         success: true,
+        id: user._id,
+        token,
         message: "Check your email to reset password",
       });
     } else {
@@ -164,6 +174,8 @@ const resetPassword = async (req, res) => {
         message: "The Reset Token Has Expired or is invalid!",
       });
 
+    jwt.verify(token, process.env.JWT_SECRET);
+
     const validateToken = await User.findOne({ _id: id, token });
     if (!validateToken)
       return resourceError(res, {
@@ -178,15 +190,23 @@ const resetPassword = async (req, res) => {
       try {
         await User.findByIdAndUpdate(
           { _id: id },
-          { $set: { password: hash, token: null } }
+          {
+            $set: {
+              password: hash,
+              token: null,
+              is2FAEnabled: false,
+              twoFASecret: null
+            }
+          }
         );
-
+        const clientIp = getClientIp(req);
         // send email to user.email
         const data = await ejs.renderFile(
           path.join(__dirname, `/../views/passwordChanged.ejs`),
           {
             sitename: "AL MADINA IT",
             fullname: user.fullname,
+            ip: clientIp
           }
         );
 

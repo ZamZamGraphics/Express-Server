@@ -178,6 +178,10 @@ const updateStudent = async (req, res) => {
 
     const stdPhone = validMobileNumber(req.body.stdPhone);
     const guardianPhone = validMobileNumber(req.body.guardianPhone) || "";
+    const address = {
+      present: req.body.present,
+      permanent: req.body.permanent
+    }
 
     let avatar = student.avatar;
     if (req.files && req.files.length > 0) {
@@ -196,6 +200,7 @@ const updateStudent = async (req, res) => {
     const updatedData = {
       ...req.body,
       avatar,
+      address,
       phone: [stdPhone, guardianPhone],
     };
 
