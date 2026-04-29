@@ -3,19 +3,18 @@ const { resourceError } = require("../utilities/error");
 
 // sms validator
 const smsValidators = [
-  check("studentId")
-    .optional({ checkFalsy: true })
-    .isArray(),
-  check("batchNo")
-    .optional({ checkFalsy: true })
-    .isNumeric()
-    .withMessage("Invalid Batch Number")
+  check("number")
+    .isLength({ min: 1 })
+    .withMessage("This field is required.")
     .trim(),
-  check("messages")
+  check("status")
+    .isIn(["student", "employee", "batch"])
+    .withMessage("Invalid Status field."),
+  check("message")
     .notEmpty()
-    .withMessage('Messages is required')
-    .isLength({max:350})       
-    .withMessage('Messages must be 350 characters')
+    .withMessage('Message is required')
+    .isLength({ max: 350 })
+    .withMessage('Message must be 350 characters.')
     .trim()
 ];
 
