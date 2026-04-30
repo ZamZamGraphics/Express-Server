@@ -14,7 +14,7 @@ const sendMessage = async (req, res) => {
         "phone"
       );
       if (!student) {
-        return resourceError(res, { message: "Student not found." });
+        return resourceError(res, { general: "Student not found." });
       }
       findNumbers.push(student.phone[0]);
     }
@@ -24,7 +24,7 @@ const sendMessage = async (req, res) => {
         $or: [{ fullName: number }, { phone: number }]
       }).select("phone");
       if (!employee) {
-        return resourceError(res, { message: "Employee not found." });
+        return resourceError(res, { general: "Employee not found." });
       }
       findNumbers.push(...employee.phone);
     }
@@ -33,11 +33,11 @@ const sendMessage = async (req, res) => {
       const batch = await Batch.findOne({ batchNo: number })
 
       if (!batch) {
-        return resourceError(res, { message: "Batch not found." });
+        return resourceError(res, { general: "Batch not found." });
       }
 
       if (!batch.student || batch.student.length === 0) {
-        return resourceError(res, { message: "Student not exist in this Batch." });
+        return resourceError(res, { general: "Student not exist in this Batch." });
       }
 
       const students = await Student.find({
@@ -57,25 +57,25 @@ const sendMessage = async (req, res) => {
     const data = await sendSMS({ numbers, message });
 
     if (data === 5201) {
-      return resourceError(res, { message: "API not valid." });
+      return resourceError(res, { general: "API not valid." });
     } else if (data === 5202) {
-      return resourceError(res, { message: "API not Active." });
+      return resourceError(res, { general: "API not Active." });
     } else if (data === 5203) {
-      return resourceError(res, { message: "Sender Id not valid." });
+      return resourceError(res, { general: "Sender Id not valid." });
     } else if (data === 5204) {
-      return resourceError(res, { message: "Test Body not valid." });
+      return resourceError(res, { general: "Test Body not valid." });
     } else if (data === 5205) {
-      return resourceError(res, { message: "Contact Numbers Not Valid." });
+      return resourceError(res, { general: "Contact Numbers Not Valid." });
     } else if (data === 5206) {
-      return resourceError(res, { message: "Insuficient Balance." });
+      return resourceError(res, { general: "Insuficient Balance." });
     } else if (data === 5207) {
       return resourceError(res, {
-        message: "Insuficient Balance of your seller (The person opned your account)."
+        general: "Insuficient Balance of your seller (The person opned your account)."
       });
     } else if (data === 5208) {
-      return resourceError(res, { message: "Account Not Active." });
+      return resourceError(res, { general: "Account Not Active." });
     } else if (data === 5209) {
-      return resourceError(res, { message: "Account Expired." });
+      return resourceError(res, { general: "Account Expired." });
     }
 
     res.status(200).json({
