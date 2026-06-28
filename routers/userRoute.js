@@ -16,6 +16,7 @@ const {
   userUpdateValidationHandler,
 } = require("../validator/userUpdateValidator");
 const avatarUpload = require("../middleware/avatarUpload");
+const upload = require("../utilities/multer");
 
 // User route
 router.get("/", allUser);
@@ -23,6 +24,7 @@ router.get("/:id", userById);
 
 router.post(
   "/register",
+  upload.single("avatar"),
   avatarUpload,
   userValidators,
   userValidationHandler,
@@ -31,6 +33,7 @@ router.post(
 
 router.patch(
   "/:id",
+  upload.single("avatar"),
   avatarUpload,
   userUpdateValidators,
   userUpdateValidationHandler,

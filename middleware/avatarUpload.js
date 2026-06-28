@@ -1,27 +1,18 @@
-const uploader = require("../utilities/singleUploader");
-const { resourceError } = require("../utilities/error");
+const { uploadFile } = require("../utilities/r2Service")
 
-function avatarUpload(req, res, next) {
-  const upload = uploader(
-    "upload",
-    ["image/jpeg", "image/jpg", "image/png"],
-    1000000,
-    "Only .jpg, jpeg or .png format allowed!"
-  );
+const avatarUpload = async (req, res, next) => {
+  try {
+    if (req?.file) {
+      // Optional: use a custom prefix from the request body e.g. "avatars"
+      const prefix = req.body.folder || "uploads";
+      const result = await uploadFile(req.file, prefix);
 
-  // call the middleware function
-  upload.any()(req, res, (err) => {
-    if (err) {
-      if (err.code == "LIMIT_FILE_SIZE") {
-        return resourceError(res, {
-          message: "File larger than 2MB cannot be uploaded!",
-        });
-      }
-      return resourceError(res, err);
-    } else {
-      next();
+      req.file = result;
     }
-  });
+    next();
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 }
 
 module.exports = avatarUpload;

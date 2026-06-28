@@ -7,6 +7,7 @@ const {
     deleteEmployee
 } = require("../controllers/employeeController");
 const avatarUpload = require("../middleware/avatarUpload");
+const upload = require("../utilities/multer");
 const {
     employeeValidators,
     employeeValidationHandler
@@ -17,6 +18,7 @@ router.get("/:id", employeeById);
 
 router.post(
     "/register",
+    upload.single("avatar"),
     avatarUpload,
     employeeValidators,
     employeeValidationHandler,
@@ -25,6 +27,7 @@ router.post(
 
 router.patch(
     "/:id",
+    upload.single("avatar"),
     avatarUpload,
     employeeValidators,
     employeeValidationHandler,

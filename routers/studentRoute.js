@@ -8,6 +8,7 @@ const {
   deleteStudent,
 } = require("../controllers/studentController");
 const avatarUpload = require("../middleware/avatarUpload");
+const upload = require("../utilities/multer");
 const {
   studentValidators,
   studentValidationHandler,
@@ -19,6 +20,7 @@ router.get("/verify/:studentId", studentByStudentId);
 
 router.post(
   "/register",
+  upload.single("avatar"),
   avatarUpload,
   studentValidators,
   studentValidationHandler,
@@ -27,6 +29,7 @@ router.post(
 
 router.patch(
   "/:id",
+  upload.single("avatar"),
   avatarUpload,
   studentValidators,
   studentValidationHandler,

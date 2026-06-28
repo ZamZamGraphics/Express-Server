@@ -26,7 +26,8 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   handler: function (req, res) {
     return res.status(429).json({
-      errors: { message: "Too many login attempts. Please try again in 5 minutes." }
+      success: false,
+      message: "Too many login attempts. Please try again in 5 minutes."
     });
   },
 });
@@ -39,7 +40,8 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   handler: function (req, res) {
     return res.status(429).json({
-      errors: { message: "Too many requests. Please try again later." }
+      success: false,
+      message: "Too many requests. Please try again later."
     });
   },
 });
@@ -114,12 +116,30 @@ app.use((req, res, next) => {
   next(createError(404, "Your requested content was not found!"));
 });
 
-// common error handler
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error(err); // server side log
-  res.status(err.status || 500);
-  res.json({
-    message: err.message || "Internal Server Error",
+  // Multer errors (file size, file type, etc.)
+  if (err.name === "MulterError") {
+    const messages = {
+      LIMIT_FILE_SIZE: "File too large. Max size is 2 MB.",
+      LIMIT_FILE_COUNT: "Too many files. Max is 1 files per request.",
+      LIMIT_UNEXPECTED_FILE: `Unexpected field: ${err.field}`,
+    };
+    return res.status(400).json({
+      success: false,
+      message: messages[err.code] || err.message,
+    });
+  }
+
+  // File type rejection from fileFilter
+  if (err.message?.startsWith("File type not allowed")) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+
+  console.error("[server error]", err);  // server side log
+  return res.status(500).json({
+    success: false,
+    message: err.message || "Internal server error",
     ...(process.env.NODE_ENV === "development" && { stack: err.stack })
   });
 });

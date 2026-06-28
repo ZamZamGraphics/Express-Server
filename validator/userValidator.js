@@ -1,8 +1,7 @@
 const { check, validationResult } = require("express-validator");
 const User = require("../models/User");
 const { resourceError } = require("../utilities/error");
-const path = require("path");
-const { unlink } = require("fs");
+const { deleteFile } = require("../utilities/r2Service");
 
 // user validator
 const userValidators = [
@@ -51,18 +50,14 @@ const userValidators = [
     .withMessage("Role must be Admin ro User"),
 ];
 
-const userValidationHandler = (req, res, next) => {
+const userValidationHandler = async (req, res, next) => {
   const errors = validationResult(req);
   const mappedErrors = errors.mapped();
   if (Object.keys(mappedErrors).length === 0) {
     next();
   } else {
-    // remove uploaded files
-    if (req.files.length > 0) {
-      const { filename } = req.files[0];
-      unlink(path.join(__dirname, `/../public/upload/${filename}`), (err) => {
-        if (err) resourceError(res, err);
-      });
+    if (req?.file) {
+      await deleteFile(req.file.key);
     }
     return resourceError(res, mappedErrors);
   }

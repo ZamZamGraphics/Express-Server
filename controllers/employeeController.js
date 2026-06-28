@@ -1,5 +1,6 @@
 const Employee = require("../models/Employee");
 const { serverError, resourceError } = require("../utilities/error");
+const { fileExists, deleteFile } = require("../utilities/r2Service");
 const path = require("path");
 const { unlink } = require("fs");
 
@@ -80,24 +81,19 @@ const register = async (req, res) => {
         const phonePrimary = req.body?.phonePrimary;
         const phoneSecondary = req.body?.phoneSecondary || "";
 
-        let newEmployee;
-        if (req.files && req.files.length > 0) {
-            newEmployee = new Employee({
-                ...req.body,
-                phone: [phonePrimary, phoneSecondary],
-                user: req.user.userid,
-                avatar: req.files[0].filename,
-            });
-        } else {
-            newEmployee = new Employee({
-                ...req.body,
-                phone: [phonePrimary, phoneSecondary],
-                user: req.user.userid,
-                avatar: null,
-            });
+        const data = {
+            ...req.body,
+            phone: [phonePrimary, phoneSecondary],
+            user: req.user.userid,
+            avatar: null,
+        };
+        if (req?.file) {
+            data.avatar = req.file.key
         }
 
-        const employee = await newEmployee.save();
+        const employeeData = new Employee(data);
+        const employee = await employeeData.save();
+
         res.status(201).json({
             message: "New employee register successfully.",
             employee,
@@ -116,17 +112,14 @@ const updateEmployee = async (req, res) => {
         const phoneSecondary = req.body?.phoneSecondary || "";
 
         let avatar = employee.avatar;
-        if (req.files && req.files.length > 0) {
-            if (avatar !== null && avatar !== req.files[0].filename) {
-                // check new avatar and remove old avatar
-                unlink(
-                    path.join(__dirname, `/../public/upload/${employee.avatar}`),
-                    (err) => {
-                        if (err) resourceError(res, err);
-                    }
-                );
+        if (req?.file) {
+            if (avatar) {
+                const oldAvatar = await fileExists(avatar)
+                if (oldAvatar) {
+                    await deleteFile(avatar);
+                }
             }
-            avatar = req.files[0].filename;
+            avatar = req.file.key
         }
 
         const updatedData = {
@@ -158,12 +151,7 @@ const deleteEmployee = async (req, res) => {
 
         // remove uploaded files
         if (employee?.avatar) {
-            unlink(
-                path.join(__dirname, `/../public/upload/${employee.avatar}`),
-                (err) => {
-                    if (err) resourceError(res, err);
-                }
-            );
+            await deleteFile(employee.avatar)
         }
 
         await Employee.findByIdAndDelete(id);

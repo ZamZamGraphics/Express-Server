@@ -3,8 +3,7 @@ const Admission = require("../models/Admission");
 const Batch = require("../models/Batch");
 const { serverError, resourceError } = require("../utilities/error");
 const validMobileNumber = require("../utilities/validMobileNumber");
-const path = require("path");
-const { unlink } = require("fs");
+const { fileExists, deleteFile } = require("../utilities/r2Service");
 
 const allStudents = async (req, res) => {
   try {
@@ -140,28 +139,22 @@ const register = async (req, res) => {
       permanent: req.body.permanent
     }
 
-    let newStudent;
-    if (req.files && req.files.length > 0) {
-      newStudent = new Student({
-        ...req.body,
-        studentId: Math.floor(newID) + 1,
-        phone: [stdPhone, guardianPhone],
-        address,
-        user: req.user.userid,
-        avatar: req.files[0].filename,
-      });
-    } else {
-      newStudent = new Student({
-        ...req.body,
-        studentId: Math.floor(newID) + 1,
-        phone: [stdPhone, guardianPhone],
-        address,
-        user: req.user.userid,
-        avatar: null,
-      });
+    const data = {
+      ...req.body,
+      studentId: Math.floor(newID) + 1,
+      phone: [stdPhone, guardianPhone],
+      address,
+      user: req.user.userid,
+      avatar: null,
     }
 
-    const student = await newStudent.save();
+    if (req?.file) {
+      data.avatar = req.file.key
+    }
+
+    const studentData = new Student(data);
+    const student = await studentData.save();
+
     res.status(201).json({
       message: "New Student Register",
       student,
@@ -184,17 +177,14 @@ const updateStudent = async (req, res) => {
     }
 
     let avatar = student.avatar;
-    if (req.files && req.files.length > 0) {
-      if (avatar !== null && avatar !== req.files[0].filename) {
-        // check new avatar and remove old avatar
-        unlink(
-          path.join(__dirname, `/../public/upload/${student.avatar}`),
-          (err) => {
-            if (err) resourceError(res, err);
-          }
-        );
+    if (req?.file) {
+      if (avatar) {
+        const oldAvatar = await fileExists(avatar)
+        if (oldAvatar) {
+          await deleteFile(avatar);
+        }
       }
-      avatar = req.files[0].filename;
+      avatar = req.file.key
     }
 
     const updatedData = {
@@ -230,12 +220,7 @@ const deleteStudent = async (req, res) => {
 
     // remove uploaded files
     if (student?.avatar) {
-      unlink(
-        path.join(__dirname, `/../public/upload/${student.avatar}`),
-        (err) => {
-          if (err) resourceError(res, err);
-        }
-      );
+      await deleteFile(student.avatar)
     }
 
     // remove student ID from Batch

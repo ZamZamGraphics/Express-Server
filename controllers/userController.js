@@ -3,10 +3,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Settings = require("../models/Settings");
 const { serverError, resourceError } = require("../utilities/error");
+const { fileExists, deleteFile } = require("../utilities/r2Service");
 const sendEmail = require("../utilities/sendEmail");
 const ejs = require("ejs");
 const path = require("path");
-const { unlink } = require("fs");
 
 const allUser = async (req, res) => {
   try {
@@ -70,29 +70,24 @@ const userById = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    let newUser;
     const hashedPassword = await bcrypt.hash(req.body.password, 11);
     // Generate token by jsonwebtoken and send mail to verify user email
     const token = jwt.sign({ email: req.body.email }, process.env.JWT_SECRET, {
       expiresIn: 60 * 5,
     });
 
-    if (req.files && req.files.length > 0) {
-      newUser = new User({
-        ...req.body,
-        password: hashedPassword,
-        token,
-        avatar: req.files[0].filename,
-      });
-    } else {
-      newUser = new User({
-        ...req.body,
-        password: hashedPassword,
-        token,
-        avatar: null,
-      });
+    const userData = {
+      ...req.body,
+      password: hashedPassword,
+      token,
+      avatar: null,
+    };
+
+    if (req?.file) {
+      userData.avatar = req.file.key
     }
 
+    const newUser = new User(userData);
     const user = await newUser.save();
 
     const settings = new Settings({
@@ -158,17 +153,14 @@ const updateUser = async (req, res) => {
     let password = req.body?.password || null;
 
     let avatar = user.avatar;
-    if (req.files && req.files.length > 0) {
-      if (avatar !== null && avatar !== req.files[0].filename) {
-        // remove old avatar
-        unlink(
-          path.join(__dirname, `/../public/upload/${user.avatar}`),
-          (err) => {
-            if (err) resourceError(res, err);
-          }
-        );
+    if (req?.file) {
+      if (avatar) {
+        const oldAvatar = await fileExists(avatar)
+        if (oldAvatar) {
+          await deleteFile(avatar);
+        }
       }
-      avatar = req.files[0].filename;
+      avatar = req.file.key
     }
 
     updateFields.avatar = avatar;
@@ -242,17 +234,18 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    let id = req.params.id;
+    const currentUser = req.user.userid;
+    const id = req.params.id;
+
+    if (currentUser === id) {
+      return resourceError(req, { message: "Delete not allowed!" })
+    }
+
     const user = await User.findById(id);
 
     // remove uploaded files
     if (user.avatar) {
-      unlink(
-        path.join(__dirname, `/../public/upload/${user.avatar}`),
-        (err) => {
-          if (err) resourceError(res, err);
-        }
-      );
+      await deleteFile(user.avatar)
     }
 
     await User.findByIdAndDelete(id);
