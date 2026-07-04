@@ -137,7 +137,7 @@ app.use((err, req, res, next) => {
   }
 
   console.error("[server error]", err);  // server side log
-  return res.status(500).json({
+  return res.status(err.status || err.statusCode || 500).json({
     success: false,
     message: err.message || "Internal server error",
     ...(process.env.NODE_ENV === "development" && { stack: err.stack })
@@ -149,5 +149,5 @@ app.listen(PORT, () => {
   mongoose
     .connect(DB_URL)
     .then(() => console.log("Database connection successful!"))
-    .catch((err) => console.log(err));
+    .catch((err) => console.error(err));
 });
