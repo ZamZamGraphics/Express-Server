@@ -65,17 +65,19 @@ async function uploadFile(file, prefix = "uploads") {
  * Delete a file from R2 by its key.
  */
 async function deleteFile(key) {
-  const command = new DeleteObjectCommand({ Bucket: BUCKET, Key: key });
+  const imagePath = key.startsWith("uploads/") ? `${key}` : `uploads/${key}`;
+  const command = new DeleteObjectCommand({ Bucket: BUCKET, Key: imagePath });
   await r2Client.send(command);
-  return { deleted: key };
+  return { deleted: imagePath };
 }
 
 /**
  * Check if a file exists in R2.
  */
 async function fileExists(key) {
+  const imagePath = key.startsWith("uploads/") ? `${key}` : `uploads/${key}`;
   try {
-    await r2Client.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }));
+    await r2Client.send(new HeadObjectCommand({ Bucket: BUCKET, Key: imagePath }));
     return true;
   } catch (err) {
     if (err.name === "NotFound" || err.$metadata?.httpStatusCode === 404) {
