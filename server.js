@@ -107,7 +107,14 @@ app.get("/", (req, res) => {
     message: "Welcome To Our Application",
   });
 });
-
+// debug-ip address
+app.get('/debug-ip', (req, res) => {
+  res.json({
+    reqIp: req.ip,
+    cfConnectingIp: req.headers['cf-connecting-ip'],
+    xForwardedFor: req.headers['x-forwarded-for'],
+  });
+});
 // setting view engine to ejs
 app.set("view engine", "ejs");
 
