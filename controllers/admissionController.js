@@ -92,28 +92,33 @@ const admissionById = async (req, res) => {
 };
 
 const findByStdId = async (req, res) => {
-  const { studentId, batchNo } = req.params;
-  const student = await Student.findOne({ studentId });
-  let admission = null;
-  if (student) {
-    admission = await Admission.findOne({
-      student: student._id,
-      batchNo,
-    })
-      .populate({
-        path: "student",
-        select: "studentId avatar fullName address phone status",
+  try {
+    const { studentId, batchNo } = req.params;
+    const student = await Student.findOne({ studentId });
+    let admission = null;
+    if (student) {
+      admission = await Admission.findOne({
+        student: student._id,
+        batchNo,
       })
-      .sort({ admitedAt: -1 })
-      .limit(1);
+        .populate({
+          path: "student",
+          select: "studentId avatar fullName address phone status",
+        })
+        .sort({ admitedAt: -1 })
+        .limit(1);
+    }
+
     if (!admission) {
       return resourceError(res, {
         message: "Student ID & Batch No did not matched!",
       });
     }
-  }
+    res.status(200).json({ success: true, admission });
 
-  res.status(200).json({ admission });
+  } catch (error) {
+    serverError(res, error);
+  }
 };
 
 const newAdmission = async (req, res) => {
