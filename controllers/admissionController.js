@@ -185,6 +185,7 @@ const newAdmission = async (req, res) => {
       discount,
       payableAmount,
       nextPay: nextPayment,
+      status: due > 0 ? 'Advanced' : 'Paid',
       paymentHistory: [
         {
           date: new Date(),
