@@ -5,7 +5,8 @@ const {
   ListObjectsV2Command,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { v4: uuidv4 } = require("uuid");
+// const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require('node:crypto');
 const path = require("path");
 const r2Client = require("./r2Client");
 
@@ -30,7 +31,7 @@ function getPublicUrl(key) {
  */
 function buildKey(originalName, prefix = "uploads") {
   const ext = path.extname(originalName).toLowerCase();
-  return `${prefix}/${uuidv4()}${ext}`;
+  return `${prefix}/${randomUUID()}${ext}`;
 }
 
 /**
