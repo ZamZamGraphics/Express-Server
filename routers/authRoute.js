@@ -1,8 +1,11 @@
 const router = require("express").Router();
-const authenticate = require("../middleware/authenticate");
+const { authLimiter } = require("../middleware/rateLimit");
+const requireAuth = require("../middleware/requireAuth");
 
 const {
     login,
+    logout,
+    logoutAll,
     verification,
     resendVerification,
     forgotPassowrd,
@@ -27,15 +30,22 @@ const { getTrustedDevice, deleteTrustedDevice } = require("../controllers/truste
 
 // Login, Verify, Resend, Forgot password Route
 router.post("/login",
+    authLimiter,
     doLoginValidators,
     doLoginValidationHandler,
     login
 );
 router.post("/2fa/login",
+    authLimiter,
     tokenValidators,
     tokenValidationHandler,
     complete2FALogin
 );
+
+router.get("/ping", requireAuth, (req, res) => res.json({ ok: true }));
+router.post("/logout", requireAuth, logout);
+router.post("/logout-all", requireAuth, logoutAll);
+
 router.get("/verify", verification);
 router.post("/resend", resendVerification);
 router.post("/forgot-password", forgotPassowrd);
@@ -45,10 +55,10 @@ router.post("/reset-password",
     resetPassword
 );
 
-router.post("/2fa/setup", authenticate, setup2FA);
-router.post("/2fa/verify-setup", authenticate, confirm2FASetup);
-router.post("/2fa/disable", authenticate, disable2FA);
-router.get("/trusted-device", authenticate, getTrustedDevice);
-router.delete("/trusted-device/:id", authenticate, deleteTrustedDevice);
+router.post("/2fa/setup", requireAuth, setup2FA);
+router.post("/2fa/verify-setup", requireAuth, confirm2FASetup);
+router.post("/2fa/disable", requireAuth, disable2FA);
+router.get("/trusted-device", requireAuth, getTrustedDevice);
+router.delete("/trusted-device/:id", requireAuth, deleteTrustedDevice);
 
 module.exports = router;

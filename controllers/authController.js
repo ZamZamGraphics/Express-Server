@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const TrustedDevice = require("../models/TrustedDevice");
+const Session = require("../models/Session");
+const { issueToken, preAuthToken } = require("../utilities/token");
 const generateDeviceId = require("../utilities/generateDeviceId")
 const { serverError, resourceError } = require("../utilities/error");
 const sendEmail = require("../utilities/sendEmail");
@@ -263,23 +265,28 @@ const login = async (req, res) => {
     });
 
     if (!user.is2FAEnabled || trustedDevice) {
-      // generate token
-      const token = jwt.sign({ userid: user._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRY,
-      });
+      const token = await issueToken(req, res, user, deviceId);
       return res.status(200).json({ success: true, userid: user._id, token });
     }
 
     res.json({
       require2FA: true,
-      userid: user._id,
-      deviceId,
+      preAuthToken: preAuthToken(user, deviceId),
       message: "Two Factor Authentication Required",
     });
   } catch (err) {
-    console.log(err)
     return serverError(res, err);
   }
+};
+
+const logout = async (req, res) => {
+  await Session.updateOne({ _id: req.user.sid }, { revoked: true });
+  res.json({ success: true });
+};
+
+const logoutAll = async (req, res) => {
+  await Session.updateMany({ userid: req.user.userid }, { revoked: true });
+  res.json({ success: true });
 };
 
 module.exports = {
@@ -288,4 +295,6 @@ module.exports = {
   forgotPassowrd,
   resetPassword,
   login,
+  logout,
+  logoutAll
 };

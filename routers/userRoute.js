@@ -4,6 +4,7 @@ const {
   register,
   allUser,
   userById,
+  userProfile,
   updateUser,
   deleteUser,
 } = require("../controllers/userController");
@@ -20,6 +21,7 @@ const upload = require("../utilities/multer");
 
 // User route
 router.get("/", allUser);
+router.get("/me", userProfile);
 router.get("/:id", userById);
 
 router.post(

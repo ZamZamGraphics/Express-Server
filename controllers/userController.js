@@ -68,6 +68,16 @@ const userById = async (req, res) => {
   }
 };
 
+const userProfile = async (req, res) => {
+  try {
+    const id = req.user.userid;
+    const user = await User.findById(id).select('-password -twoFASecret -__v').lean();
+    res.status(200).json(user);
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
 const register = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 11);
@@ -249,7 +259,7 @@ const deleteUser = async (req, res) => {
     }
 
     await User.findByIdAndDelete(id);
-    res.status(200).json({ message: "User was deleted!" });
+    res.status(200).json({ success: true, message: "User was deleted!" });
   } catch (error) {
     serverError(res, error);
   }
@@ -258,6 +268,7 @@ const deleteUser = async (req, res) => {
 module.exports = {
   allUser,
   userById,
+  userProfile,
   register,
   updateUser,
   deleteUser,

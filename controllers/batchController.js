@@ -159,9 +159,8 @@ const deleteBatch = async (req, res) => {
     // finally batch delete
     await Batch.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Batch was deleted!" });
+    res.status(200).json({ success: true, message: "Batch was deleted!" });
   } catch (error) {
-    console.log(error);
     serverError(res, error);
   }
 };

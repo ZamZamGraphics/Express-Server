@@ -387,41 +387,6 @@ const createNewBatch = async (batchNo, course, student, timeSchedule) => {
   }
 };
 
-const migratePaymentsBulk = async (req, res) => {
-  try {
-    // updateMany + aggregation pipeline
-    const result = await Admission.updateMany(
-      { payment: { $exists: true } }, // শুধু যাদের payment আছে
-      [
-        {
-          $set: {
-            // paymentHistory যদি না থাকে, নতুন array create করবে
-            paymentHistory: {
-              $concatArrays: [
-                { $ifNull: ["$paymentHistory", []] },
-                [
-                  {
-                    date: "$admitedAt",
-                    amount: "$payment",
-                    method: "Cash",
-                    transactionId: null,
-                  },
-                ],
-              ],
-            },
-          },
-        },
-        { $unset: ["payment", "paymentType", "due"] }, // optional: remove old payment field
-      ]
-    );
-
-    res.status(200).json({ message: "Migration completed", result });
-  } catch (error) {
-    console.log(error)
-    serverError(res, error);
-  }
-};
-
 module.exports = {
   allAdmission,
   admissionById,
@@ -429,5 +394,4 @@ module.exports = {
   newAdmission,
   payment,
   deleteAdmission,
-  migratePaymentsBulk
 };

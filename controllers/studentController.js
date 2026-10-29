@@ -246,7 +246,7 @@ const deleteStudent = async (req, res) => {
 
     // finally delete student
     await Student.findByIdAndDelete(id);
-    res.status(200).json({ message: "Student was deleted!" });
+    res.status(200).json({ success: true, message: "Student was deleted!" });
   } catch (error) {
     serverError(res, error);
   }
